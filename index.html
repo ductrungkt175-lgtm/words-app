@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App từ vựng</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #000;
+            color: #fff;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+        }
+
+        .main-actions {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+
+        .study-button {
+            background-color: #666;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .study-button:hover {
+            background-color: #555;
+            transform: translateY(-2px);
+        }
+
+        .backup-actions {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+
+        .backup-button {
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .backup-button:hover {
+            background-color: #219652;
+            transform: translateY(-2px);
+        }
+
+        .import-button {
+            background-color: #e67e22;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .import-button:hover {
+            background-color: #d35400;
+            transform: translateY(-2px);
+        }
+
+        .file-input-container {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .file-input {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .folder-creation {
+            background-color: #111;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #333;
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            color: #fff;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #ccc;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            background-color: #222;
+            color: #fff;
+            border: 1px solid #444;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0d62d9;
+        }
+
+        .folder-list {
+            margin-top: 20px;
+        }
+
+        .folder-item {
+            background-color: #222;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .folder-item:hover {
+            background-color: #2a2a2a;
+        }
+
+        .folder-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .folder-main {
+            flex: 1;
+        }
+
+        .folder-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+
+        .folder-code {
+            font-weight: bold;
+            color: #1a73e8;
+            font-size: 1.1em;
+        }
+
+        .folder-name {
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .folder-stats {
+            text-align: right;
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        .total-words {
+            margin-bottom: 3px;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #666;
+            padding: 40px;
+            font-style: italic;
+        }
+
+        .stats {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #111;
+            border-radius: 10px;
+            border: 1px solid #333;
+            text-align: center;
+        }
+
+        .stat-item {
+            margin: 10px 0;
+            color: #ccc;
+            font-size: 1.1em;
+        }
+
+        .stat-number {
+            color: #1a73e8;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>App từ vựng</h1>
+        </header>
+
+        <div class="main-actions">
+            <a href="choose.html" class="study-button">Chọn từ để học</a>
+        </div>
+
+        <div class="backup-actions">
+            <button class="backup-button" onclick="exportData()">📤 Xuất dữ liệu</button>
+            <div class="file-input-container">
+                <input type="file" id="importFile" class="file-input" accept=".json">
+                <button class="import-button">📥 Import dữ liệu</button>
+            </div>
+        </div>
+
+        <section class="folder-creation">
+            <h2 class="section-title">Tạo thư mục mới</h2>
+            
+            <div class="form-group">
+                <label for="folderCode">Mã thư mục:</label>
+                <input type="text" id="folderCode" placeholder="Nhập mã thư mục">
+            </div>
+            <div class="form-group">
+                <label for="folderName">Tên thư mục:</label>
+                <input type="text" id="folderName" placeholder="Nhập tên thư mục">
+            </div>
+            <button id="addFolderBtn">Thêm Thư mục</button>
+        </section>
+
+        <div class="folder-list" id="folderList">
+            <!-- Danh sách thư mục sẽ hiện ở đây -->
+        </div>
+
+        <div class="stats" id="statsContainer">
+            <!-- Thống kê sẽ được hiển thị ở đây -->
+        </div>
+    </div>
+
+    <script>
+        // Khởi tạo dữ liệu
+        function initializeData() {
+            if (!localStorage.getItem('folders')) {
+                localStorage.setItem('folders', JSON.stringify([]));
+            }
+            if (!localStorage.getItem('vocabularies')) {
+                localStorage.setItem('vocabularies', JSON.stringify([]));
+            }
+        }
+
+        // Lấy danh sách thư mục
+        function getFolders() {
+            return JSON.parse(localStorage.getItem('folders')) || [];
+        }
+
+        // Lấy danh sách từ vựng
+        function getVocabularies() {
+            return JSON.parse(localStorage.getItem('vocabularies')) || [];
+        }
+
+        // Lưu danh sách thư mục
+        function saveFolders(folders) {
+            localStorage.setItem('folders', JSON.stringify(folders));
+        }
+
+        // Hàm chuẩn hóa level
+        function normalizeLevel(level) {
+            if (typeof level === 'number') return level;
+            if (typeof level === 'string') {
+                // Chuyển đổi các giá trị chuỗi thành số
+                if (level === 'v' || level === 'v. phr') return 0;
+                return parseInt(level) || 0;
+            }
+            return 0;
+        }
+
+        // Hiển thị danh sách thư mục
+        function displayFolders() {
+            const folderList = document.getElementById('folderList');
+            const folders = getFolders();
+            const vocabularies = getVocabularies();
+
+            if (folders.length === 0) {
+                folderList.innerHTML = '<div class="no-data">Chưa có thư mục nào. Hãy thêm thư mục đầu tiên!</div>';
+                return;
+            }
+
+            folderList.innerHTML = folders.map(folder => {
+                const folderVocabs = vocabularies.filter(v => v.s === folder.code);
+                const totalWords = folderVocabs.length;
+                
+                // Sửa lỗi tính wordsToLearn
+                const wordsToLearn = folderVocabs.filter(v => {
+                    const level = normalizeLevel(v.l);
+                    return level === 0;
+                }).length;
+
+                return `
+                    <div class="folder-item" onclick="viewFolder('${folder.code}')">
+                        <div class="folder-info">
+                            <div class="folder-main">
+                                <div class="folder-header">
+                                    <div class="folder-code">${folder.code}</div>
+                                    <div class="folder-name">${folder.name}</div>
+                                </div>
+                            </div>
+                            <div class="folder-stats">
+                                <div class="total-words">${totalWords} từ</div>
+                                <div class="words-to-learn">${wordsToLearn} từ cần học</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Thêm thư mục mới
+        function addFolder() {
+            const folderCode = document.getElementById('folderCode').value.trim();
+            const folderName = document.getElementById('folderName').value.trim();
+
+            if (!folderCode || !folderName) {
+                alert('Vui lòng nhập đầy đủ mã và tên thư mục');
+                return;
+            }
+
+            const folders = getFolders();
+            
+            // Kiểm tra trùng mã hoặc tên
+            if (folders.some(folder => folder.code === folderCode)) {
+                alert('Mã thư mục đã tồn tại');
+                return;
+            }
+
+            if (folders.some(folder => folder.name === folderName)) {
+                alert('Tên thư mục đã tồn tại');
+                return;
+            }
+
+            // Thêm thư mục mới
+            folders.push({
+                code: folderCode,
+                name: folderName
+            });
+
+            saveFolders(folders);
+            displayFolders();
+            displayStats();
+            
+            // Reset form
+            document.getElementById('folderCode').value = '';
+            document.getElementById('folderName').value = '';
+        }
+
+        // Xem chi tiết thư mục
+        function viewFolder(folderCode) {
+            window.location.href = `folder.html?folderCode=${folderCode}`;
+        }
+
+        // Lấy thống kê (phiên bản sửa lỗi)
+        function getStats() {
+            const folders = getFolders();
+            const vocabularies = getVocabularies();
+            
+            const totalFolders = folders.length;
+            const totalWords = vocabularies.length;
+            
+            // Xử lý cả số và chuỗi cho trường level
+            const wordsToLearn = vocabularies.filter(v => {
+                const level = normalizeLevel(v.l);
+                return level === 0;
+            }).length;
+            
+            const learnedWords = vocabularies.filter(v => {
+                const level = normalizeLevel(v.l);
+                return level > 0;
+            }).length;
+
+            return {
+                totalFolders,
+                totalWords,
+                wordsToLearn,
+                learnedWords
+            };
+        }
+
+        // Hiển thị thống kê
+        function displayStats() {
+            const statsContainer = document.getElementById('statsContainer');
+            const stats = getStats();
+
+            statsContainer.innerHTML = `
+                <div class="stat-item">Tổng thư mục: <span class="stat-number">${stats.totalFolders}</span></div>
+                <div class="stat-item">Tổng từ vựng: <span class="stat-number">${stats.totalWords}</span></div>
+                <div class="stat-item">Từ cần học: <span class="stat-number">${stats.wordsToLearn}</span></div>
+                <div class="stat-item">Từ đã học: <span class="stat-number">${stats.learnedWords}</span></div>
+            `;
+        }
+
+        // Xuất dữ liệu ra file JSON
+        function exportData() {
+            const data = {
+                folders: getFolders(),
+                vocabularies: getVocabularies(),
+                exportTime: new Date().toISOString(),
+                version: "1.0"
+            };
+
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `vocabulary-backup-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            alert(`Đã xuất dữ liệu thành công!\nTổng: ${data.folders.length} thư mục, ${data.vocabularies.length} từ vựng`);
+        }
+
+        // Import dữ liệu từ file JSON
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    // Validate dữ liệu
+                    if (!data.folders || !data.vocabularies) {
+                        alert('File không hợp lệ: thiếu dữ liệu folders hoặc vocabularies');
+                        return;
+                    }
+
+                    if (!confirm(`Sẽ thay thế toàn bộ dữ liệu hiện tại bằng:\n${data.folders.length} thư mục\n${data.vocabularies.length} từ vựng\n\nTiếp tục?`)) {
+                        return;
+                    }
+
+                    // Lưu dữ liệu mới
+                    localStorage.setItem('folders', JSON.stringify(data.folders));
+                    localStorage.setItem('vocabularies', JSON.stringify(data.vocabularies));
+
+                    alert('Import dữ liệu thành công!');
+                    displayFolders();
+                    displayStats();
+                    
+                    // Reset file input
+                    event.target.value = '';
+                } catch (error) {
+                    alert('Lỗi khi đọc file JSON: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Khởi chạy
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeData();
+            displayFolders();
+            displayStats();
+
+            // Gắn sự kiện
+            document.getElementById('addFolderBtn').addEventListener('click', addFolder);
+            document.getElementById('importFile').addEventListener('change', importData);
+        });
+    </script>
+</body>
+</html>

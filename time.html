@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tính thời gian ôn tập - App từ vựng</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #000;
+            color: #fff;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        .results-container {
+            background-color: #222;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .result-item {
+            padding: 10px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .word-info {
+            flex: 1;
+        }
+
+        .word-en {
+            font-weight: bold;
+            color: #1a73e8;
+        }
+
+        .word-level {
+            color: #ccc;
+            font-size: 0.9em;
+        }
+
+        .time-info {
+            text-align: right;
+            color: #888;
+            font-size: 0.8em;
+        }
+
+        .next-review {
+            color: #4caf50;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            text-align: center;
+            text-decoration: none;
+            color: white;
+        }
+
+        .study-again {
+            background-color: #1a73e8;
+        }
+
+        .study-again:hover {
+            background-color: #0d62d9;
+        }
+
+        .go-home {
+            background-color: #666;
+        }
+
+        .go-home:hover {
+            background-color: #555;
+        }
+
+        .summary {
+            background-color: #333;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #666;
+            padding: 40px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⏰ Tính thời gian ôn tập</h1>
+        </header>
+
+        <div id="summary" class="summary">
+            <!-- Tóm tắt kết quả -->
+        </div>
+
+        <div class="results-container" id="resultsContainer">
+            <!-- Chi tiết kết quả -->
+        </div>
+
+        <div class="action-buttons">
+            <a href="choose.html" class="action-btn study-again">🎯 Học tiếp</a>
+            <a href="index.html" class="action-btn go-home">🏠 Về trang chủ</a>
+        </div>
+    </div>
+
+    <script>
+        // Khoảng thời gian ôn tập theo level (milliseconds)
+        const LEVEL_INTERVALS = {
+            0: 0,           // 0 ngày (học ngay)
+            1: 86400000,    // 1 ngày
+            2: 259200000,   // 3 ngày
+            3: 604800000,   // 7 ngày
+            4: 1728000000,  // 20 ngày
+            5: 2592000000,  // 30 ngày (1 tháng)
+            6: 7776000000,  // 90 ngày (3 tháng)
+            7: 15552000000  // 180 ngày (6 tháng)
+        };
+
+        // Định dạng thời gian
+        function formatTime(milliseconds) {
+            if (milliseconds === 0) return 'Ngay bây giờ';
+            
+            const days = Math.floor(milliseconds / (1000 * 60 * 60 * 24));
+            if (days === 0) return 'Ít hơn 1 ngày';
+            if (days === 1) return '1 ngày';
+            if (days < 30) return `${days} ngày`;
+            
+            const months = Math.floor(days / 30);
+            if (months === 1) return '1 tháng';
+            if (months < 12) return `${months} tháng`;
+            
+            const years = Math.floor(months / 12);
+            return `${years} năm`;
+        }
+
+        // Tính toán và lưu kết quả
+        function processStudyResults() {
+            const summaryElement = document.getElementById('summary');
+            const resultsContainer = document.getElementById('resultsContainer');
+            
+            // Lấy kết quả từ study.html
+            const studyResults = JSON.parse(localStorage.getItem('selectedStudyWords') || '[]');
+            
+            if (studyResults.length === 0) {
+                summaryElement.innerHTML = '<p>❌ Không có dữ liệu kết quả học tập!</p>';
+                resultsContainer.innerHTML = '<div class="no-data">Không có từ nào để xử lý</div>';
+                return;
+            }
+
+            // Lấy toàn bộ từ vựng
+            let allVocabularies = JSON.parse(localStorage.getItem('vocabularies') || '[]');
+            const now = Date.now();
+            let updatedCount = 0;
+
+            // Cập nhật từ vựng với thời gian ôn tập mới
+            studyResults.forEach(studiedWord => {
+                const level = studiedWord.l || 0;
+                const interval = LEVEL_INTERVALS[level] || 0;
+                const nextReviewTime = now + interval;
+
+                // Tìm và cập nhật từ trong allVocabularies
+                const index = allVocabularies.findIndex(v => 
+                    v.w === studiedWord.w && v.s === studiedWord.s
+                );
+
+                if (index !== -1) {
+                    allVocabularies[index].l = level;
+                    allVocabularies[index].t = now; // Cập nhật thời gian học cuối
+                    updatedCount++;
+                }
+            });
+
+            // Lưu lại vào localStorage
+            localStorage.setItem('vocabularies', JSON.stringify(allVocabularies));
+
+            // Hiển thị tóm tắt
+            summaryElement.innerHTML = `
+                <p>✅ Đã cập nhật <strong>${updatedCount}</strong> từ vựng</p>
+                <p>⏰ Thời gian ôn tập đã được tính toán</p>
+            `;
+
+            // Hiển thị chi tiết
+            displayResults(studyResults);
+        }
+
+        // Hiển thị kết quả chi tiết
+        function displayResults(studyResults) {
+            const resultsContainer = document.getElementById('resultsContainer');
+            const now = Date.now();
+
+            if (studyResults.length === 0) {
+                resultsContainer.innerHTML = '<div class="no-data">Không có kết quả nào</div>';
+                return;
+            }
+
+            let resultsHTML = '';
+            
+            studyResults.forEach(word => {
+                const level = word.l || 0;
+                const interval = LEVEL_INTERVALS[level] || 0;
+                const nextReviewTime = now + interval;
+
+                resultsHTML += `
+                    <div class="result-item">
+                        <div class="word-info">
+                            <div class="word-en">${word.w}</div>
+                            <div class="word-level">Level: ${level}</div>
+                        </div>
+                        <div class="time-info">
+                            <div class="next-review">Ôn lại: ${formatTime(interval)}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            resultsContainer.innerHTML = resultsHTML;
+        }
+
+        // Khởi chạy
+        document.addEventListener('DOMContentLoaded', function() {
+            processStudyResults();
+            
+            // Xóa dữ liệu tạm sau khi xử lý
+            setTimeout(() => {
+                localStorage.removeItem('selectedStudyWords');
+            }, 5000);
+        });
+    </script>
+</body>
+</html>
