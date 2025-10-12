@@ -190,12 +190,25 @@
             
             let wordsToLearn = allVocabularies.filter(vocab => needsReview(vocab));
 
-            // Sắp xếp theo độ quá hạn (quá hạn nhiều trước)
+            // Sắp xếp theo ưu tiên mới
             wordsToLearn.sort((a, b) => {
+                // Ưu tiên 1: Từ level 1 (từ làm sai reset)
+                if (a.l === 1 && b.l !== 1) return -1;
+                if (b.l === 1 && a.l !== 1) return 1;
+                
+                // Ưu tiên 2: Từ quá hạn nhiều hơn
                 const now = Date.now();
                 const overdueA = now - (a.nt || 0);
                 const overdueB = now - (b.nt || 0);
-                return overdueB - overdueA;
+                if (overdueA !== overdueB) {
+                    return overdueB - overdueA; // Quá hạn nhiều hơn xếp trước
+                }
+                
+                // Ưu tiên 3: Từ level 0 (từ mới nạp)
+                if (a.l === 0 && b.l !== 0) return -1;
+                if (b.l === 0 && a.l !== 0) return 1;
+                
+                return 0;
             });
 
             return wordsToLearn.slice(0, 10); // Lấy tối đa 10 từ

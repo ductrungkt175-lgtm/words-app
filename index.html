@@ -320,22 +320,12 @@
             localStorage.setItem('folders', JSON.stringify(folders));
         }
 
-        // Hàm chuẩn hóa level
-        function normalizeLevel(level) {
-            if (typeof level === 'number') return level;
-            if (typeof level === 'string') {
-                // Chuyển đổi các giá trị chuỗi thành số
-                if (level === 'v' || level === 'v. phr') return 0;
-                return parseInt(level) || 0;
-            }
-            return 0;
-        }
-
         // Hiển thị danh sách thư mục
         function displayFolders() {
             const folderList = document.getElementById('folderList');
             const folders = getFolders();
             const vocabularies = getVocabularies();
+            const now = Date.now();
 
             if (folders.length === 0) {
                 folderList.innerHTML = '<div class="no-data">Chưa có thư mục nào. Hãy thêm thư mục đầu tiên!</div>';
@@ -346,10 +336,10 @@
                 const folderVocabs = vocabularies.filter(v => v.s === folder.code);
                 const totalWords = folderVocabs.length;
                 
-                // Sửa lỗi tính wordsToLearn
+                // Tính từ cần học dựa trên trường nt
                 const wordsToLearn = folderVocabs.filter(v => {
-                    const level = normalizeLevel(v.l);
-                    return level === 0;
+                    // Nếu không có nt hoặc nt <= thời gian hiện tại -> cần học
+                    return !v.nt || v.nt <= now;
                 }).length;
 
                 return `
@@ -414,23 +404,22 @@
             window.location.href = `folder.html?folderCode=${folderCode}`;
         }
 
-        // Lấy thống kê (phiên bản sửa lỗi)
+        // Lấy thống kê
         function getStats() {
             const folders = getFolders();
             const vocabularies = getVocabularies();
+            const now = Date.now();
             
             const totalFolders = folders.length;
             const totalWords = vocabularies.length;
             
-            // Xử lý cả số và chuỗi cho trường level
+            // Tính từ cần học dựa trên trường nt
             const wordsToLearn = vocabularies.filter(v => {
-                const level = normalizeLevel(v.l);
-                return level === 0;
+                return !v.nt || v.nt <= now;
             }).length;
             
             const learnedWords = vocabularies.filter(v => {
-                const level = normalizeLevel(v.l);
-                return level > 0;
+                return v.nt && v.nt > now;
             }).length;
 
             return {
@@ -450,7 +439,7 @@
                 <div class="stat-item">Tổng thư mục: <span class="stat-number">${stats.totalFolders}</span></div>
                 <div class="stat-item">Tổng từ vựng: <span class="stat-number">${stats.totalWords}</span></div>
                 <div class="stat-item">Từ cần học: <span class="stat-number">${stats.wordsToLearn}</span></div>
-                <div class="stat-item">Từ đã học: <span class="stat-number">${stats.learnedWords}</span></div>
+                <div class="stat-item">Từ chờ nhắc: <span class="stat-number">${stats.learnedWords}</span></div>
             `;
         }
 

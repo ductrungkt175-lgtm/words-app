@@ -259,28 +259,19 @@
           hiddenSpan.classList.remove('hidden-text');
           hasShownText = true;
           
-          // Ấn hiện từ = reset level 0
+          // Ấn hiện từ = st = 0 (reset về level 1)
           if (firstAttempt) {
             if (!wordResults[currentWord.w]) {
               wordResults[currentWord.w] = { en_vi: false, vi_en: false };
             }
             wordResults[currentWord.w][MODES[currentModeIndex]] = false;
-            currentWord.l = 0;
-            
-            let question, correctAnswer;
-            if (MODES[currentModeIndex] === "en_vi") {
-              question = `${currentWord.w} [${currentWord.p}]`;
-              correctAnswer = currentWord.m;
-            } else {
-              question = currentWord.m;
-              correctAnswer = currentWord.w;
-            }
             
             wrongQuestions.push({
               w: currentWord.w,
+              s: currentWord.s, // THÊM TRƯỜNG s
               mode: MODES[currentModeIndex],
-              question: question,
-              correctAnswer: correctAnswer,
+              question: `${currentWord.w} [${currentWord.p}]`,
+              correctAnswer: currentWord.m,
               audioWord: currentWord.w
             });
             
@@ -288,7 +279,7 @@
             firstAttempt = false;
           }
           
-          document.getElementById("feedback").innerHTML = "❌ Đã hiện từ! Từ này sẽ được đưa về level 0.";
+          document.getElementById("feedback").innerHTML = "❌ Đã hiện từ! Từ này sẽ được reset về level 1.";
           document.getElementById('nextBtn').style.display = 'block';
           updateProgressCounter();
         }
@@ -309,7 +300,7 @@
         if (firstAttempt) {
           // Chỉ tính khi chọn đúng lần đầu VÀ chưa ấn hiện từ
           if (!hasShownText) {
-            // ✅ Case 1: Chọn đúng lần đầu, từ ẩn -> LÊN LEVEL
+            // ✅ Case 1: Chọn đúng lần đầu, từ ẩn -> st = 1
             if (!wordResults[currentWord.w]) {
               wordResults[currentWord.w] = { en_vi: false, vi_en: false };
             }
@@ -317,20 +308,19 @@
             correctAnswers++;
             fb.innerHTML = "✅ Đúng!";
           } else {
-            // ❌ Case 2: Đã ấn hiện từ trước đó -> RESET LEVEL 0
+            // ❌ Case 2: Đã ấn hiện từ trước đó -> st = 0
             if (!wordResults[currentWord.w]) {
               wordResults[currentWord.w] = { en_vi: false, vi_en: false };
             }
             wordResults[currentWord.w][MODES[currentModeIndex]] = false;
-            currentWord.l = 0;
             wrongAnswers++;
-            fb.innerHTML = "✅ Đúng nhưng đã hiện từ trước! Level reset về 0";
+            fb.innerHTML = "✅ Đúng nhưng đã hiện từ trước! st = 0";
           }
           
           firstAttempt = false;
         } else {
           // Các lần chọn sau không tính
-          fb.innerHTML = "✅ Đúng! (Không tính level)";
+          fb.innerHTML = "✅ Đúng! (Không tính st)";
         }
 
         // HIỆN NÚT NEXT KHI CHỌN ĐÚNG (chỉ mode en_vi)
@@ -354,35 +344,26 @@
       } else {
         btn.classList.add('incorrect-answer');
         if (firstAttempt) {
-          // ❌ Case 3: Chọn sai lần đầu -> RESET LEVEL 0
+          // ❌ Case 3: Chọn sai lần đầu -> st = 0
           if (!wordResults[currentWord.w]) {
             wordResults[currentWord.w] = { en_vi: false, vi_en: false };
           }
           wordResults[currentWord.w][MODES[currentModeIndex]] = false;
-          currentWord.l = 0;
           wrongAnswers++;
-          
-          let question, correctAnswer;
-          if (MODES[currentModeIndex] === "en_vi") {
-            question = `${currentWord.w} [${currentWord.p}]`;
-            correctAnswer = currentWord.m;
-          } else {
-            question = currentWord.m;
-            correctAnswer = currentWord.w;
-          }
           
           wrongQuestions.push({
             w: currentWord.w,
+            s: currentWord.s, // THÊM TRƯỜNG s
             mode: MODES[currentModeIndex],
-            question: question,
-            correctAnswer: correctAnswer,
+            question: MODES[currentModeIndex] === "en_vi" ? `${currentWord.w} [${currentWord.p}]` : currentWord.m,
+            correctAnswer: MODES[currentModeIndex] === "en_vi" ? currentWord.m : currentWord.w,
             audioWord: currentWord.w
           });
           
           firstAttempt = false;
-          fb.innerHTML = "❌ Sai! Level reset về 0";
+          fb.innerHTML = "❌ Sai! st = 0";
         } else {
-          fb.innerHTML = "❌ Sai! (Không tính level)";
+          fb.innerHTML = "❌ Sai! (Không tính st)";
         }
 
         // KHÔNG HIỆN NÚT NEXT KHI CHỌN SAI
@@ -406,37 +387,36 @@
     }
 
     function showResults(){
-      // ĐẢM BẢO RESET LEVEL CHO CÁC TỪ SAI
-      wrongQuestions.forEach(wrong => {
-        const wordObj = words.find(w => w.w === wrong.w);
-        if (wordObj) {
-          wordObj.l = 0;
-        }
-      });
-      
-      const container = document.getElementById("output");
-      let html = "<h3>📊 Kết quả học từ</h3>";
+      // TẠO MẢNG KẾT QUẢ VỚI ĐỦ THÔNG TIN
+      let studyResults = [];
       
       for (let w in wordResults) {
         const result = wordResults[w];
-        const wordObj = words.find(word => word.w === w);
-        const oldLevel = wordObj.l || 0;
-        
-        // Tính level mới: PHẢI ĐÚNG CẢ 2 MODE mới lên level
         const isCorrectBoth = result.en_vi && result.vi_en;
-        // SỬA: BỎ GIỚI HẠN MAX LEVEL (từ 7 → không giới hạn)
-        const newLevel = isCorrectBoth ? (oldLevel + 1) : Math.max(0, oldLevel);
         
-        wordObj.l = newLevel;
+        // TÌM TỪ GỐC TRONG allVocabularies ĐỂ LẤY ĐẦY ĐỦ THÔNG TIN
+        const originalWord = allVocabularies.find(word => word.w === w);
         
-        html += `<div class="result-item">${w}: Level ${oldLevel} → ${newLevel}</div>`;
-        
-        results.push({w: w, oldLevel, newLevel});
+        if (originalWord) {
+          studyResults.push({
+            w: originalWord.w,           // từ tiếng Anh
+            s: originalWord.s,           // NHÓM TỪ (QUAN TRỌNG - để phân biệt từ trùng)
+            st: isCorrectBoth ? 1 : 0    // 1=+level, 0=reset về 1
+          });
+        }
       }
       
-      // LƯU KẾT QUẢ VÀ CHUYỂN SANG TIME.HTML
-      // TRƯỜNG s VẪN GIỮ NGUYÊN TỪ ĐẦU
-      localStorage.setItem("selectedStudyWords", JSON.stringify(words));
+      // LƯU VỚI KEY ĐÚNG
+      localStorage.setItem("selectedStudyWords", JSON.stringify(studyResults));
+      
+      // HIỂN THỊ KẾT QUẢ
+      let upCount = studyResults.filter(r => r.st === 1).length;
+      let resetCount = studyResults.filter(r => r.st === 0).length;
+      
+      const container = document.getElementById("output");
+      let html = `<h3>📊 Kết quả học từ</h3>`;
+      html += `<div class="result-item">📈 Từ st = 1 (+1 level): ${upCount} từ</div>`;
+      html += `<div class="result-item">🔄 Từ st = 0 (reset level 1): ${resetCount} từ</div>`;
       
       html += `
         <div class="action-buttons">

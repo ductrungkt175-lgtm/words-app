@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tính thời gian ôn tập - App từ vựng</title>
     <style>
+        /* CSS giữ nguyên */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -151,17 +152,24 @@
     </div>
 
     <script>
-        // Khoảng thời gian ôn tập theo level (milliseconds)
-        const LEVEL_INTERVALS = {
-            0: 0,           // 0 ngày (học ngay)
-            1: 86400000,    // 1 ngày
-            2: 259200000,   // 3 ngày
-            3: 604800000,   // 7 ngày
-            4: 1728000000,  // 20 ngày
-            5: 2592000000,  // 30 ngày (1 tháng)
-            6: 7776000000,  // 90 ngày (3 tháng)
-            7: 15552000000  // 180 ngày (6 tháng)
-        };
+        // Hàm tính khoảng thời gian ôn tập theo level
+        function getLevelInterval(level) {
+            const intervals = {
+                0: 0,           // 0 ngày (học ngay)
+                1: 0,           // 0 ngày (học ngay) - MỚI
+                2: 86400000,    // 1 ngày
+                3: 86400000,    // 1 ngày
+                4: 259200000,   // 3 ngày
+                5: 604800000,   // 7 ngày
+                6: 1728000000,  // 20 ngày
+                7: 2592000000,  // 30 ngày (1 tháng)
+                8: 7776000000,  // 90 ngày (3 tháng)
+                9: 15552000000  // 180 ngày (6 tháng)
+            };
+            
+            // Từ level 9 trở đi luôn là 6 tháng
+            return level >= 9 ? 15552000000 : (intervals[level] || 0);
+        }
 
         // Định dạng thời gian
         function formatTime(milliseconds) {
@@ -201,19 +209,36 @@
 
             // Cập nhật từ vựng với thời gian ôn tập mới
             studyResults.forEach(studiedWord => {
-                const level = studiedWord.l || 0;
-                const interval = LEVEL_INTERVALS[level] || 0;
-                const nextReviewTime = now + interval;
-
-                // Tìm và cập nhật từ trong allVocabularies
+                // Tìm từ trong allVocabularies
                 const index = allVocabularies.findIndex(v => 
                     v.w === studiedWord.w && v.s === studiedWord.s
                 );
 
                 if (index !== -1) {
-                    allVocabularies[index].l = level;
-                    allVocabularies[index].t = now; // Cập nhật thời gian học cuối
+                    // Lấy level hiện tại (mặc định là 1 nếu không có)
+                    const currentLevel = allVocabularies[index].l || 1;
+                    let newLevel;
+
+                    // Tính level mới dựa trên st
+                    if (studiedWord.st === 0) {
+                        newLevel = 1;  // Reset về level 1
+                    } else {
+                        newLevel = currentLevel + 1;  // Tăng level lên 1
+                    }
+
+                    // Tính thời gian ôn tập dựa trên level mới
+                    const interval = getLevelInterval(newLevel);
+                    const nextReviewTime = now + interval;
+
+                    // Cập nhật từ vựng
+                    allVocabularies[index].l = newLevel;
+                    allVocabularies[index].lt = now;        // lastTime - thời gian học cuối
+                    allVocabularies[index].nt = nextReviewTime; // nextTime - thời gian ôn tiếp
                     updatedCount++;
+
+                    // Cập nhật level trong studyResults để hiển thị
+                    studiedWord.l = newLevel;
+                    studiedWord.interval = interval;
                 }
             });
 
@@ -243,15 +268,14 @@
             let resultsHTML = '';
             
             studyResults.forEach(word => {
-                const level = word.l || 0;
-                const interval = LEVEL_INTERVALS[level] || 0;
-                const nextReviewTime = now + interval;
+                const level = word.l || 1;
+                const interval = word.interval || getLevelInterval(level);
 
                 resultsHTML += `
                     <div class="result-item">
                         <div class="word-info">
                             <div class="word-en">${word.w}</div>
-                            <div class="word-level">Level: ${level}</div>
+                            <div class="word-level">Level: ${level} | ${word.st === 1 ? '📈 +1 level' : '🔄 Reset level 1'}</div>
                         </div>
                         <div class="time-info">
                             <div class="next-review">Ôn lại: ${formatTime(interval)}</div>
