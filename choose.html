@@ -168,18 +168,6 @@
     </div>
 
     <script>
-        // Khoảng thời gian ôn tập theo level (milliseconds)
-        const LEVEL_INTERVALS = {
-            0: 0,           // 0 ngày (học ngay)
-            1: 86400000,    // 1 ngày
-            2: 259200000,   // 3 ngày
-            3: 604800000,   // 7 ngày
-            4: 1728000000,  // 20 ngày
-            5: 2592000000,  // 30 ngày (1 tháng)
-            6: 7776000000,  // 90 ngày (3 tháng)
-            7: 15552000000  // 180 ngày (6 tháng)
-        };
-
         // Lấy danh sách từ vựng
         function getVocabularies() {
             return JSON.parse(localStorage.getItem('vocabularies')) || [];
@@ -190,15 +178,10 @@
             return JSON.parse(localStorage.getItem('folders')) || [];
         }
 
-        // Kiểm tra từ có cần ôn tập không
+        // Kiểm tra từ có cần ôn tập không (DÙNG TRƯỜNG nt)
         function needsReview(vocab) {
-            if (vocab.l === 0) return true; // Từ mới chưa học
-            
             const now = Date.now();
-            const timeSinceLastReview = now - (vocab.t || now);
-            const requiredInterval = LEVEL_INTERVALS[vocab.l] || 0;
-            
-            return timeSinceLastReview >= requiredInterval;
+            return now >= (vocab.nt || 0);
         }
 
         // Lấy từ vựng cần học
@@ -207,30 +190,33 @@
             
             let wordsToLearn = allVocabularies.filter(vocab => needsReview(vocab));
 
-            // Sắp xếp: từ mới (level 0) trước, sau đó đến từ cần ôn tập
+            // Sắp xếp theo độ quá hạn (quá hạn nhiều trước)
             wordsToLearn.sort((a, b) => {
-                if (a.l === 0 && b.l > 0) return -1;
-                if (a.l > 0 && b.l === 0) return 1;
-                return 0;
+                const now = Date.now();
+                const overdueA = now - (a.nt || 0);
+                const overdueB = now - (b.nt || 0);
+                return overdueB - overdueA;
             });
 
             return wordsToLearn.slice(0, 10); // Lấy tối đa 10 từ
         }
 
-        // Chuyển đổi từ để tạo URL mp3
-        function convertWordForMP3(word) {
-            return word.replace(/ /g, '_');
-        }
-
-        // Phát âm từ
+        // Phát âm từ - CHỈ DÙNG WEB SPEECH API (KHÔNG DÙNG MP3)
         function playWordPronunciation(word) {
-            const convertedWord = convertWordForMP3(word);
-            const audioUrl = `https://remarkable-cactus-c15479.netlify.app/mp3file/${convertedWord}.mp3`;
-            
-            const audio = new Audio(audioUrl);
-            audio.play().catch(error => {
-                console.log('Lỗi phát âm:', error);
-            });
+            if ('speechSynthesis' in window) {
+                // Dừng phát âm thanh cũ nếu có
+                speechSynthesis.cancel();
+                
+                // Tạo phát âm mới
+                const utterance = new SpeechSynthesisUtterance(word);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.8; // Tốc độ chậm lại để dễ nghe
+                
+                console.log('🔊 Đang phát âm:', word);
+                speechSynthesis.speak(utterance);
+            } else {
+                console.log('❌ Trình duyệt không hỗ trợ phát âm thanh');
+            }
         }
 
         // Hiển thị danh sách từ để học
@@ -294,6 +280,23 @@
                 window.location.href = 'study.html';
             });
         });
+
+        // TẠO DỮ LIỆU TEST TỰ ĐỘNG NẾU CHƯA CÓ
+        setTimeout(() => {
+            const existingVocab = getVocabularies();
+            if (existingVocab.length === 0) {
+                const testData = [
+                    {w: "Apple", m: "quả táo", nt: 0, l: 1, p: "/ˈæp.əl/"},
+                    {w: "Computer", m: "máy tính", nt: 0, l: 1, p: "/kəmˈpjuː.tər/"},
+                    {w: "Hello", m: "xin chào", nt: 0, l: 1, p: "/heˈləʊ/"},
+                    {w: "Book", m: "sách", nt: 0, l: 1, p: "/bʊk/"},
+                    {w: "Pen", m: "bút", nt: 0, l: 1, p: "/pen/"}
+                ];
+                localStorage.setItem('vocabularies', JSON.stringify(testData));
+                console.log('✅ Đã tạo dữ liệu test tự động');
+                displayWordsToLearn();
+            }
+        }, 1000);
     </script>
 </body>
 </html>

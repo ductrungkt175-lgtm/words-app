@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Study Words - Trắc nghiệm</title>
   <style>
+    /* CSS giữ nguyên */
     * {
       box-sizing: border-box;
     }
@@ -165,20 +166,15 @@
       counter.innerHTML = `${totalWords}/${currentQuestion}/${correctAnswers}r/${wrongAnswers}w`;
     }
 
-    // Chuyển đổi từ để tạo URL mp3
-    function convertWordForMP3(w) {
-      return w.replace(/ /g, '_');
-    }
-
-    // Phát âm từ
+    // Phát âm từ - DÙNG WEB SPEECH API (ĐÃ SỬA)
     function playAudio(w) {
-      const convertedWord = convertWordForMP3(w);
-      const audioUrl = `https://remarkable-cactus-c15479.netlify.app/mp3file/${convertedWord}.mp3`;
-      
-      const audio = new Audio(audioUrl);
-      audio.play().catch(error => {
-        console.log("Lỗi phát âm:", error);
-      });
+      if ('speechSynthesis' in window) {
+        speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(w);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.8;
+        speechSynthesis.speak(utterance);
+      }
     }
 
     function nextQuestion() {
@@ -428,7 +424,8 @@
         
         // Tính level mới: PHẢI ĐÚNG CẢ 2 MODE mới lên level
         const isCorrectBoth = result.en_vi && result.vi_en;
-        const newLevel = isCorrectBoth ? Math.min((oldLevel + 1), 7) : Math.max(0, oldLevel);
+        // SỬA: BỎ GIỚI HẠN MAX LEVEL (từ 7 → không giới hạn)
+        const newLevel = isCorrectBoth ? (oldLevel + 1) : Math.max(0, oldLevel);
         
         wordObj.l = newLevel;
         
@@ -438,6 +435,7 @@
       }
       
       // LƯU KẾT QUẢ VÀ CHUYỂN SANG TIME.HTML
+      // TRƯỜNG s VẪN GIỮ NGUYÊN TỪ ĐẦU
       localStorage.setItem("selectedStudyWords", JSON.stringify(words));
       
       html += `
