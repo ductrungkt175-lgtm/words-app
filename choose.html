@@ -184,46 +184,50 @@
             return now >= (vocab.nt || 0);
         }
 
-        // Lấy từ vựng cần học
+        // Lấy từ vựng cần học - ĐÃ SỬA: LỌC TỪ TRÙNG
         function getWordsToLearn() {
             const allVocabularies = getVocabularies();
             
             let wordsToLearn = allVocabularies.filter(vocab => needsReview(vocab));
 
-            // Sắp xếp theo ưu tiên mới
-            wordsToLearn.sort((a, b) => {
-                // Ưu tiên 1: Từ level 1 (từ làm sai reset)
-                if (a.l === 1 && b.l !== 1) return -1;
-                if (b.l === 1 && a.l !== 1) return 1;
-                
-                // Ưu tiên 2: Từ quá hạn nhiều hơn
-                const now = Date.now();
-                const overdueA = now - (a.nt || 0);
-                const overdueB = now - (b.nt || 0);
-                if (overdueA !== overdueB) {
-                    return overdueB - overdueA; // Quá hạn nhiều hơn xếp trước
+            // LỌC BỎ TỪ TRÙNG - CHỈ GIỮ LẠI 1 TỪ CHO MỖI TỪ TIẾNG ANH
+            const uniqueWords = new Map();
+            wordsToLearn.forEach(vocab => {
+                if (!uniqueWords.has(vocab.w)) {
+                    uniqueWords.set(vocab.w, vocab);
                 }
+            });
+            wordsToLearn = Array.from(uniqueWords.values());
+
+            // Sắp xếp theo ưu tiên
+            wordsToLearn.sort((a, b) => {
+                if (a.l > 0 && b.l > 0) {
+                    if (a.l === 1 && b.l === 1) {
+                        return (b.lt || 0) - (a.lt || 0);
+                    }
+                    return a.l - b.l;
+                }
+                if (a.l > 0 && b.l === 0) return -1;
+                if (b.l > 0 && a.l === 0) return 1;
                 
-                // Ưu tiên 3: Từ level 0 (từ mới nạp)
-                if (a.l === 0 && b.l !== 0) return -1;
-                if (b.l === 0 && a.l !== 0) return 1;
+                if (a.s !== b.s) {
+                    return a.s.localeCompare(b.s);
+                }
                 
                 return 0;
             });
 
-            return wordsToLearn.slice(0, 10); // Lấy tối đa 10 từ
+            return wordsToLearn.slice(0, 10);
         }
 
         // Phát âm từ - CHỈ DÙNG WEB SPEECH API (KHÔNG DÙNG MP3)
         function playWordPronunciation(word) {
             if ('speechSynthesis' in window) {
-                // Dừng phát âm thanh cũ nếu có
                 speechSynthesis.cancel();
                 
-                // Tạo phát âm mới
                 const utterance = new SpeechSynthesisUtterance(word);
                 utterance.lang = 'en-US';
-                utterance.rate = 0.8; // Tốc độ chậm lại để dễ nghe
+                utterance.rate = 0.8;
                 
                 console.log('🔊 Đang phát âm:', word);
                 speechSynthesis.speak(utterance);

@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Study Words - Trắc nghiệm</title>
   <style>
-    /* CSS giữ nguyên */
     * {
       box-sizing: border-box;
     }
@@ -131,7 +130,7 @@
   <div id="feedback"></div>
 
   <script>
-    // Lấy từ vựng từ choose.html - chỉ lấy từ level 0
+    // Lấy từ vựng từ choose.html
     let allVocabularies = JSON.parse(localStorage.getItem("vocabularies") || "[]");
     let words = JSON.parse(localStorage.getItem("selectedStudyWords") || "[]");
 
@@ -166,7 +165,7 @@
       counter.innerHTML = `${totalWords}/${currentQuestion}/${correctAnswers}r/${wrongAnswers}w`;
     }
 
-    // Phát âm từ - DÙNG WEB SPEECH API (ĐÃ SỬA)
+    // Phát âm từ - DÙNG WEB SPEECH API
     function playAudio(w) {
       if ('speechSynthesis' in window) {
         speechSynthesis.cancel();
@@ -261,10 +260,12 @@
           
           // Ấn hiện từ = st = 0 (reset về level 1)
           if (firstAttempt) {
-            if (!wordResults[currentWord.w]) {
-              wordResults[currentWord.w] = { en_vi: false, vi_en: false };
+            // TẠO KEY DUY NHẤT KẾT HỢP w VÀ s
+            const uniqueKey = `${currentWord.w}_${currentWord.s}`;
+            if (!wordResults[uniqueKey]) {
+              wordResults[uniqueKey] = { en_vi: false, vi_en: false, word: currentWord };
             }
-            wordResults[currentWord.w][MODES[currentModeIndex]] = false;
+            wordResults[uniqueKey][MODES[currentModeIndex]] = false;
             
             wrongQuestions.push({
               w: currentWord.w,
@@ -301,18 +302,21 @@
           // Chỉ tính khi chọn đúng lần đầu VÀ chưa ấn hiện từ
           if (!hasShownText) {
             // ✅ Case 1: Chọn đúng lần đầu, từ ẩn -> st = 1
-            if (!wordResults[currentWord.w]) {
-              wordResults[currentWord.w] = { en_vi: false, vi_en: false };
+            // TẠO KEY DUY NHẤT KẾT HỢP w VÀ s
+            const uniqueKey = `${currentWord.w}_${currentWord.s}`;
+            if (!wordResults[uniqueKey]) {
+              wordResults[uniqueKey] = { en_vi: false, vi_en: false, word: currentWord };
             }
-            wordResults[currentWord.w][MODES[currentModeIndex]] = true;
+            wordResults[uniqueKey][MODES[currentModeIndex]] = true;
             correctAnswers++;
             fb.innerHTML = "✅ Đúng!";
           } else {
             // ❌ Case 2: Đã ấn hiện từ trước đó -> st = 0
-            if (!wordResults[currentWord.w]) {
-              wordResults[currentWord.w] = { en_vi: false, vi_en: false };
+            const uniqueKey = `${currentWord.w}_${currentWord.s}`;
+            if (!wordResults[uniqueKey]) {
+              wordResults[uniqueKey] = { en_vi: false, vi_en: false, word: currentWord };
             }
-            wordResults[currentWord.w][MODES[currentModeIndex]] = false;
+            wordResults[uniqueKey][MODES[currentModeIndex]] = false;
             wrongAnswers++;
             fb.innerHTML = "✅ Đúng nhưng đã hiện từ trước! st = 0";
           }
@@ -345,10 +349,12 @@
         btn.classList.add('incorrect-answer');
         if (firstAttempt) {
           // ❌ Case 3: Chọn sai lần đầu -> st = 0
-          if (!wordResults[currentWord.w]) {
-            wordResults[currentWord.w] = { en_vi: false, vi_en: false };
+          // TẠO KEY DUY NHẤT KẾT HỢP w VÀ s
+          const uniqueKey = `${currentWord.w}_${currentWord.s}`;
+          if (!wordResults[uniqueKey]) {
+            wordResults[uniqueKey] = { en_vi: false, vi_en: false, word: currentWord };
           }
-          wordResults[currentWord.w][MODES[currentModeIndex]] = false;
+          wordResults[uniqueKey][MODES[currentModeIndex]] = false;
           wrongAnswers++;
           
           wrongQuestions.push({
@@ -390,20 +396,18 @@
       // TẠO MẢNG KẾT QUẢ VỚI ĐỦ THÔNG TIN
       let studyResults = [];
       
-      for (let w in wordResults) {
-        const result = wordResults[w];
+      for (let uniqueKey in wordResults) {
+        const result = wordResults[uniqueKey];
         const isCorrectBoth = result.en_vi && result.vi_en;
         
-        // TÌM TỪ GỐC TRONG allVocabularies ĐỂ LẤY ĐẦY ĐỦ THÔNG TIN
-        const originalWord = allVocabularies.find(word => word.w === w);
+        // LẤY THÔNG TIN TỪ GỐC TỪ wordResults (đã lưu đầy đủ)
+        const wordData = result.word;
         
-        if (originalWord) {
-          studyResults.push({
-            w: originalWord.w,           // từ tiếng Anh
-            s: originalWord.s,           // NHÓM TỪ (QUAN TRỌNG - để phân biệt từ trùng)
-            st: isCorrectBoth ? 1 : 0    // 1=+level, 0=reset về 1
-          });
-        }
+        studyResults.push({
+          w: wordData.w,           // từ tiếng Anh
+          s: wordData.s,           // NHÓM TỪ (QUAN TRỌNG - để phân biệt từ trùng)
+          st: isCorrectBoth ? 1 : 0    // 1=+level, 0=reset về 1
+        });
       }
       
       // LƯU VỚI KEY ĐÚNG

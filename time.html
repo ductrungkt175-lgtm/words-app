@@ -1,3 +1,5 @@
+[file name]: time.html
+[file content begin]
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -209,7 +211,7 @@
 
             // Cập nhật từ vựng với thời gian ôn tập mới
             studyResults.forEach(studiedWord => {
-                // Tìm từ trong allVocabularies
+                // SỬA LỖI: Tìm từ bằng cả w VÀ s để tránh trùng từ giữa các folder
                 const index = allVocabularies.findIndex(v => 
                     v.w === studiedWord.w && v.s === studiedWord.s
                 );
@@ -238,6 +240,7 @@
 
                     // Cập nhật level trong studyResults để hiển thị
                     studiedWord.l = newLevel;
+                    studiedWord.oldLevel = currentLevel;
                     studiedWord.interval = interval;
                 }
             });
@@ -269,13 +272,14 @@
             
             studyResults.forEach(word => {
                 const level = word.l || 1;
+                const oldLevel = word.oldLevel || 1;
                 const interval = word.interval || getLevelInterval(level);
 
                 resultsHTML += `
                     <div class="result-item">
                         <div class="word-info">
                             <div class="word-en">${word.w}</div>
-                            <div class="word-level">Level: ${level} | ${word.st === 1 ? '📈 +1 level' : '🔄 Reset level 1'}</div>
+                            <div class="word-level">Level: ${oldLevel} → ${level} | ${word.st === 1 ? '📈 +1 level' : '🔄 Reset level 1'}</div>
                         </div>
                         <div class="time-info">
                             <div class="next-review">Ôn lại: ${formatTime(interval)}</div>
@@ -299,3 +303,4 @@
     </script>
 </body>
 </html>
+[file content end]
