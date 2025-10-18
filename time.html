@@ -1,5 +1,3 @@
-[file name]: time.html
-[file content begin]
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -7,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tính thời gian ôn tập - App từ vựng</title>
     <style>
-        /* CSS giữ nguyên */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -211,7 +208,7 @@
 
             // Cập nhật từ vựng với thời gian ôn tập mới
             studyResults.forEach(studiedWord => {
-                // SỬA LỖI: Tìm từ bằng cả w VÀ s để tránh trùng từ giữa các folder
+                // Tìm từ bằng cả w VÀ s để tránh trùng từ giữa các folder
                 const index = allVocabularies.findIndex(v => 
                     v.w === studiedWord.w && v.s === studiedWord.s
                 );
@@ -221,11 +218,16 @@
                     const currentLevel = allVocabularies[index].l || 1;
                     let newLevel;
 
-                    // Tính level mới dựa trên st
+                    // SỬA LỖI 1: Tính level mới - Level 0 chỉ lên Level 1
                     if (studiedWord.st === 0) {
                         newLevel = 1;  // Reset về level 1
                     } else {
                         newLevel = currentLevel + 1;  // Tăng level lên 1
+                        
+                        // QUAN TRỌNG: Nếu đang ở level 0, chỉ lên level 1
+                        if (currentLevel === 0) {
+                            newLevel = 1;
+                        }
                     }
 
                     // Tính thời gian ôn tập dựa trên level mới
@@ -303,4 +305,3 @@
     </script>
 </body>
 </html>
-[file content end]
