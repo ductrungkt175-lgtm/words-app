@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kết quả luyện gõ từ</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #000;
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #fff;
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+
+        .back-button {
+            background-color: #666;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .back-button:hover {
+            background-color: #555;
+        }
+
+        .results-summary {
+            background-color: #222;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid #333;
+            text-align: center;
+        }
+
+        .summary-title {
+            color: #1a73e8;
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+        }
+
+        .summary-stats {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4caf50;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .words-results {
+            margin-bottom: 30px;
+        }
+
+        .result-item {
+            background-color: #222;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .word-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .word-en {
+            font-size: 1.1rem;
+            color: #1a73e8;
+            flex: 1;
+        }
+
+        .level-change {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #888;
+        }
+
+        .level-old, .level-new {
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .level-old {
+            background: #333;
+            color: #ccc;
+        }
+
+        .level-up .level-new {
+            background: #1a331a;
+            color: #4caf50;
+        }
+
+        .level-down .level-new {
+            background: #331a1a;
+            color: #f44336;
+        }
+
+        .level-same .level-new {
+            background: #1a1a33;
+            color: #2196f3;
+        }
+
+        .level-arrow {
+            font-size: 1.2rem;
+        }
+
+        .letter-details {
+            margin: 10px 0;
+        }
+
+        .letter-breakdown {
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .letter-status {
+            display: inline-block;
+            padding: 2px 5px;
+            margin: 1px;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .letter-perfect {
+            background: #1a331a;
+            color: #4caf50;
+        }
+
+        .letter-error {
+            background: #331a1a;
+            color: #f44336;
+        }
+
+        .letter-fixed {
+            background: #333311;
+            color: #ffeb3b;
+        }
+
+        .letter-untouched {
+            background: #1a1a1a;
+            color: #666;
+        }
+
+        .word-result {
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            display: inline-block;
+        }
+
+        .word-passed {
+            background: #1a331a;
+            color: #4caf50;
+        }
+
+        .word-failed {
+            background: #331a1a;
+            color: #f44336;
+        }
+
+        .actions {
+            text-align: center;
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .continue-button {
+            background-color: #2196f3;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .continue-button:hover {
+            background-color: #1976d2;
+        }
+
+        .retry-button {
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .retry-button:hover {
+            background-color: #f57c00;
+        }
+
+        .no-results {
+            text-align: center;
+            color: #666;
+            padding: 40px;
+            font-style: italic;
+        }
+
+        @media (max-width: 600px) {
+            .word-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .summary-stats {
+                gap: 10px;
+            }
+            
+            .stat-value {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Kết quả luyện gõ từ</h1>
+            <a href="index.html" class="back-button">← Về trang chủ</a>
+        </header>
+
+        <div class="results-summary" id="resultsSummary">
+            <!-- Tổng kết kết quả -->
+        </div>
+
+        <div class="words-results" id="wordsResults">
+            <!-- Kết quả chi tiết từng từ -->
+        </div>
+
+        <div class="actions">
+            <button class="continue-button" id="continueButton">Tiếp tục học</button>
+            <button class="retry-button" id="retryButton" style="display: none;">Luyện tập lại từ sai</button>
+        </div>
+    </div>
+
+    <script>
+        let resultsData = null;
+        let updatedVocabularies = [];
+        let failedWords = [];
+
+        // Lấy dữ liệu kết quả
+        function getResultsData() {
+            try {
+                // Lấy từ localStorage
+                const storedResults = localStorage.getItem('typingResults');
+                if (storedResults) {
+                    const results = JSON.parse(storedResults);
+                    localStorage.removeItem('typingResults'); // Xóa sau khi dùng
+                    return results;
+                }
+            } catch (error) {
+                console.error('Lỗi khi lấy dữ liệu từ localStorage:', error);
+            }
+            
+            return null;
+        }
+
+        // Tính thời gian tiếp theo dựa trên level
+        function calculateNextTime(level) {
+            const now = Date.now();
+            const minute = 60 * 1000;
+            const hour = 60 * minute;
+            const day = 24 * hour;
+            
+            // Thời gian cho từng level
+            const intervals = {
+                1: 0,           // Level 1: 0 phút
+                2: 15 * minute, // Level 2: 15 phút
+                3: 1 * day,     // Level 3: 1 ngày
+                4: 1 * day,     // Level 4: 1 ngày
+                5: 3 * day,     // Level 5: 3 ngày
+                6: 7 * day,     // Level 6: 7 ngày
+                7: 20 * day,    // Level 7: 20 ngày
+                8: 30 * day,    // Level 8: 30 ngày
+                9: 90 * day,    // Level 9: 90 ngày
+            };
+            
+            // Level 10 trở lên: 180 ngày
+            return now + (level in intervals ? intervals[level] : 180 * day);
+        }
+
+        // Kiểm tra từ có vượt qua không (tỷ lệ 5 chữ có 1 lỗi)
+        function checkIfWordPassed(resultString) {
+            if (!resultString) return false;
+            
+            const results = resultString.split(',');
+            const totalLetters = results.length;
+            
+            // Đếm số lỗi (2 và 3)
+            let errorCount = 0;
+            results.forEach(result => {
+                if (result === '2' || result === '3') {
+                    errorCount++;
+                }
+            });
+            
+            // Tính số lỗi cho phép: cứ 5 chữ cho phép 1 lỗi
+            let allowedErrors = Math.floor(totalLetters / 5);
+            
+            return errorCount <= allowedErrors;
+        }
+
+        // Xử lý kết quả
+        function processResults() {
+            const resultsData = getResultsData();
+            if (!resultsData) {
+                console.error('Không có dữ liệu kết quả');
+                showNoResults();
+                return;
+            }
+
+            try {
+                const vocabularies = JSON.parse(localStorage.getItem('vocabularies') || '[]');
+                const now = Date.now();
+                
+                let totalUp = 0;
+                let totalDown = 0;
+                let totalSame = 0;
+                failedWords = [];
+
+                resultsData.processedResults = resultsData.words.map((word, index) => {
+                    const resultString = resultsData.results[index];
+                    
+                    // Tìm từ trong danh sách từ vựng
+                    const vocabIndex = vocabularies.findIndex(vocab => 
+                        vocab.w === word.w
+                    );
+
+                    let oldLevel = 0;
+                    let newLevel = 0;
+                    let levelChange = 'same';
+                    let passed = false;
+
+                    if (vocabIndex !== -1) {
+                        oldLevel = vocabularies[vocabIndex].tl || 0;
+                        
+                        // Kiểm tra từ có vượt qua không
+                        passed = checkIfWordPassed(resultString);
+                        
+                        if (passed) {
+                            // Tăng level lên 1, không giới hạn
+                            newLevel = oldLevel + 1;
+                            levelChange = 'up';
+                            totalUp++;
+                        } else {
+                            // Không vượt qua, reset về level 1
+                            newLevel = 1;
+                            if (oldLevel > 1) {
+                                levelChange = 'down';
+                                totalDown++;
+                            } else {
+                                levelChange = 'same';
+                                totalSame++;
+                            }
+                            
+                            failedWords.push(word);
+                        }
+
+                        // Cập nhật thông tin từ
+                        vocabularies[vocabIndex].tl = newLevel;
+                        vocabularies[vocabIndex].tlt = now;
+                        vocabularies[vocabIndex].tnt = calculateNextTime(newLevel);
+                    }
+
+                    return {
+                        word: word,
+                        resultString: resultString,
+                        passed: passed,
+                        oldLevel: oldLevel,
+                        newLevel: newLevel,
+                        levelChange: levelChange
+                    };
+                });
+
+                updatedVocabularies = vocabularies;
+                localStorage.setItem('vocabularies', JSON.stringify(vocabularies));
+
+                resultsData.summary = {
+                    total: resultsData.words.length,
+                    up: totalUp,
+                    down: totalDown,
+                    same: totalSame,
+                    failed: failedWords.length
+                };
+
+                return resultsData;
+
+            } catch (error) {
+                console.error('Lỗi xử lý kết quả:', error);
+                return null;
+            }
+        }
+
+        // Hiển thị tổng kết
+        function displaySummary(resultsData) {
+            const summaryElement = document.getElementById('resultsSummary');
+            
+            if (!resultsData || !resultsData.summary) {
+                summaryElement.innerHTML = '<div class="no-results">Không có kết quả để hiển thị</div>';
+                return;
+            }
+
+            const { total, up, down, same, failed } = resultsData.summary;
+
+            summaryElement.innerHTML = `
+                <div class="summary-title">Tổng kết phiên học gõ từ</div>
+                <div class="summary-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">${total}</div>
+                        <div class="stat-label">Tổng từ</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" style="color: #4caf50">${up}</div>
+                        <div class="stat-label">Lên level</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" style="color: #f44336">${down}</div>
+                        <div class="stat-label">Xuống level</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" style="color: #2196f3">${same}</div>
+                        <div class="stat-label">Giữ nguyên</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" style="color: #ff9800">${failed}</div>
+                        <div class="stat-label">Cần luyện lại</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Hiển thị chi tiết từng chữ cái
+        function getLetterDetails(resultString) {
+            if (!resultString) return '';
+            
+            const results = resultString.split(',');
+            let html = '<div class="letter-breakdown">';
+            
+            results.forEach((result, index) => {
+                let statusClass = 'letter-untouched';
+                let statusText = '?';
+                
+                switch(result) {
+                    case '0':
+                        statusClass = 'letter-untouched';
+                        statusText = '_';
+                        break;
+                    case '1':
+                        statusClass = 'letter-perfect';
+                        statusText = '✓';
+                        break;
+                    case '2':
+                        statusClass = 'letter-error';
+                        statusText = '✗';
+                        break;
+                    case '3':
+                        statusClass = 'letter-fixed';
+                        statusText = '✓';
+                        break;
+                }
+                
+                html += `<span class="letter-status ${statusClass}" title="Chữ ${index + 1}">${statusText}</span>`;
+            });
+            
+            html += '</div>';
+            return html;
+        }
+
+        // Hiển thị kết quả chi tiết
+        function displayDetailedResults(resultsData) {
+            const resultsElement = document.getElementById('wordsResults');
+            
+            if (!resultsData || !resultsData.processedResults) {
+                resultsElement.innerHTML = '<div class="no-results">Không có kết quả chi tiết</div>';
+                return;
+            }
+
+            resultsElement.innerHTML = resultsData.processedResults.map(result => {
+                const levelClass = `level-${result.levelChange}`;
+                const resultClass = result.passed ? 'word-passed' : 'word-failed';
+                const resultText = result.passed ? '✅ Đạt' : '❌ Chưa đạt';
+                
+                const letterDetails = getLetterDetails(result.resultString);
+                
+                // Tính số lỗi và số lỗi cho phép
+                const results = result.resultString.split(',');
+                const totalLetters = results.length;
+                let errorCount = 0;
+                
+                results.forEach(r => {
+                    if (r === '2' || r === '3') errorCount++;
+                });
+                
+                let allowedErrors = Math.floor(totalLetters / 5);
+
+                return `
+                    <div class="result-item">
+                        <div class="word-header">
+                            <div class="word-en">${result.word.w}</div>
+                            <div class="level-change ${levelClass}">
+                                <span class="level-old">T-Lv${result.oldLevel}</span>
+                                <span class="level-arrow">→</span>
+                                <span class="level-new">T-Lv${result.newLevel}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="letter-details">
+                            ${letterDetails}
+                        </div>
+                        
+                        <div>
+                            <span class="word-result ${resultClass}">
+                                ${resultText} (${errorCount}/${allowedErrors} lỗi cho phép)
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Tiếp tục học
+        function continueLearning() {
+            window.location.href = 'chotyp.html';
+        }
+
+        // Luyện tập lại từ sai
+        function retryFailedWords() {
+            if (failedWords.length > 0) {
+                // Lưu danh sách từ sai vào localStorage
+                localStorage.setItem('selectedTypeWords', JSON.stringify(failedWords));
+                // Chuyển đến trang luyện gõ từ
+                window.location.href = 'typwor.html';
+            } else {
+                continueLearning();
+            }
+        }
+
+        // Hiển thị không có kết quả
+        function showNoResults() {
+            const summaryElement = document.getElementById('resultsSummary');
+            const resultsElement = document.getElementById('wordsResults');
+            
+            summaryElement.innerHTML = '<div class="no-results">Không có kết quả để hiển thị</div>';
+            resultsElement.innerHTML = '';
+            
+            document.getElementById('retryButton').style.display = 'none';
+        }
+
+        // Khởi tạo
+        function init() {
+            const resultsData = processResults();
+            
+            if (resultsData) {
+                displaySummary(resultsData);
+                displayDetailedResults(resultsData);
+                
+                // Hiển thị nút luyện tập lại nếu có từ sai
+                if (failedWords.length > 0) {
+                    document.getElementById('retryButton').style.display = 'block';
+                }
+            } else {
+                showNoResults();
+            }
+
+            document.getElementById('continueButton').addEventListener('click', continueLearning);
+            document.getElementById('retryButton').addEventListener('click', retryFailedWords);
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
