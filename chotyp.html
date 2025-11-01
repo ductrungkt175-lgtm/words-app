@@ -199,22 +199,32 @@
             });
             wordsToType = Array.from(uniqueWords.values());
 
-            // Sắp xếp theo ưu tiên: tl (type level) thấp trước, cùng level thì tlt (type last time) cũ hơn trước
+            // Sắp xếp theo ưu tiên GIỐNG NHƯ choose.html
             wordsToType.sort((a, b) => {
-                const a_tl = a.tl || 0;
-                const b_tl = b.tl || 0;
-                
-                if (a_tl !== b_tl) {
-                    return a_tl - b_tl;
+                // Ưu tiên từ có type level > 0 trước
+                if ((a.tl || 0) > 0 && (b.tl || 0) > 0) {
+                    // Cùng có type level > 0, sắp xếp theo type level thấp trước
+                    if ((a.tl || 0) === (b.tl || 0)) {
+                        // Cùng type level, sắp xếp theo thời gian học cuối (type last time)
+                        return (a.tlt || 0) - (b.tlt || 0);
+                    }
+                    return (a.tl || 0) - (b.tl || 0);
                 }
                 
-                // Cùng level thì ưu tiên từ học lâu hơn (tlt nhỏ hơn)
-                const a_tlt = a.tlt || 0;
-                const b_tlt = b.tlt || 0;
-                return a_tlt - b_tlt;
+                // Ưu tiên từ có type level > 0 trước type level = 0
+                if ((a.tl || 0) > 0 && (b.tl || 0) === 0) return -1;
+                if ((b.tl || 0) > 0 && (a.tl || 0) === 0) return 1;
+                
+                // Cả hai đều có type level = 0, sắp xếp theo thư mục (nếu có)
+                if (a.s !== b.s) {
+                    return a.s.localeCompare(b.s);
+                }
+                
+                return 0;
             });
 
-            return wordsToType.slice(0, 10);
+            // GIỚI HẠN 7 TỪ
+            return wordsToType.slice(0, 7);
         }
 
         // Phát âm từ
@@ -241,9 +251,9 @@
 
             const wordsToType = getWordsToType();
 
-            // Kiểm tra số lượng từ
-            if (wordsToType.length < 4) {
-                warningMessage.innerHTML = `Chỉ có ${wordsToType.length} từ để gõ. Cần nạp thêm từ mới!`;
+            // KHÔNG YÊU CẦU TỐI THIỂU 4 TỪ NỮA - 1 TỪ CŨNG HỌC ĐƯỢC
+            if (wordsToType.length === 0) {
+                warningMessage.innerHTML = 'Không có từ nào để gõ. Cần nạp thêm từ mới!';
                 warningMessage.classList.remove('hidden');
                 studyButton.disabled = true;
             } else {
@@ -281,19 +291,20 @@
         document.addEventListener('DOMContentLoaded', function() {
             displayWordsToType();
 
-            // Gắn sự kiện nút Study
+            // Gắn sự kiện nút Study - BỎ KIỂM TRA SỐ LƯỢNG TỐI THIỂU
             document.getElementById('studyButton').addEventListener('click', function() {
                 const selectedWords = getWordsToType();
                 
-                if (selectedWords.length < 4) {
-                    alert('Cần ít nhất 4 từ để bắt đầu gõ!');
+                // KHÔNG KIỂM TRA SỐ LƯỢNG TỐI THIỂU - 1 TỪ CŨNG HỌC ĐƯỢC
+                if (selectedWords.length === 0) {
+                    alert('Không có từ nào để gõ!');
                     return;
                 }
                 
                 // Lưu danh sách từ đã chọn vào localStorage
                 localStorage.setItem('selectedTypeWords', JSON.stringify(selectedWords));
                 
-                // SỬA LẠI: Chuyển sang trang typwor.html thay vì type.html
+                // Chuyển sang trang typwor.html
                 window.location.href = 'typwor.html';
             });
         });
@@ -307,7 +318,10 @@
                     {w: "Computer", m: "máy tính", p: "/kəmˈpjuː.tər/", tl: 1, tlt: Date.now() - 172800000, tnt: Date.now()},
                     {w: "Hello", m: "xin chào", p: "/heˈləʊ/", tl: 0, tlt: 0, tnt: 0},
                     {w: "Book", m: "sách", p: "/bʊk/", tl: 2, tlt: Date.now() - 259200000, tnt: Date.now()},
-                    {w: "Pen", m: "bút", p: "/pen/", tl: 1, tlt: Date.now() - 86400000, tnt: Date.now()}
+                    {w: "Pen", m: "bút", p: "/pen/", tl: 1, tlt: Date.now() - 86400000, tnt: Date.now()},
+                    {w: "Phone", m: "điện thoại", p: "/fəʊn/", tl: 0, tlt: 0, tnt: 0},
+                    {w: "Table", m: "cái bàn", p: "/ˈteɪ.bəl/", tl: 1, tlt: Date.now() - 432000000, tnt: Date.now()},
+                    {w: "Chair", m: "cái ghế", p: "/tʃeər/", tl: 0, tlt: 0, tnt: 0}
                 ];
                 localStorage.setItem('vocabularies', JSON.stringify(testData));
                 console.log('✅ Đã tạo dữ liệu test tự động cho chế độ gõ');
