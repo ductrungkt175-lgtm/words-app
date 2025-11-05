@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Luyện gõ từ</title>
+    <title>Kết quả luyện gõ từ</title>
     <style>
         * {
             box-sizing: border-box;
@@ -11,285 +11,261 @@
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        
+
         body {
             background-color: #000;
             color: #fff;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+            min-height: 100vh;
+            padding: 20px;
         }
-        
+
         .container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            padding: 10px;
-            position: relative;
             max-width: 800px;
             margin: 0 auto;
-            width: 100%;
         }
-        
+
         header {
             text-align: center;
-            margin-bottom: 15px;
-            padding-top: 10px;
+            margin-bottom: 30px;
         }
-        
+
         h1 {
             color: #fff;
-            margin-bottom: 10px;
-            font-size: 1.8rem;
-            font-weight: 300;
-            letter-spacing: 1px;
-        }
-
-        .session-stats {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            color: #888;
-            font-size: 0.9rem;
-            min-height: 20px;
-        }
-        
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .control-btn {
-            padding: 8px 12px;
-            background: #333;
-            color: white;
-            border: 1px solid #555;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            min-width: 50px;
-        }
-        
-        .control-btn:hover {
-            background: #444;
-        }
-        
-        .control-btn.active {
-            background: #555;
-            border-color: #777;
-        }
-
-        .dropdown {
-            position: relative;
-            display: inline-block;
-        }
-        
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            background: #333;
-            min-width: 70px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-            z-index: 1;
-            border-radius: 6px;
-            overflow: hidden;
-            top: 100%;
-            left: 0;
-            margin-top: 5px;
-        }
-        
-        .dropdown-content button {
-            color: white;
-            padding: 8px 12px;
-            text-decoration: none;
-            display: block;
-            width: 100%;
-            border: none;
-            background: #333;
-            cursor: pointer;
-            text-align: center;
-            transition: background 0.2s;
-        }
-        
-        .dropdown-content button:hover {
-            background: #444;
-        }
-        
-        .dropdown.active .dropdown-content {
-            display: block;
-        }
-        
-        .word-display {
             margin-bottom: 20px;
-            text-align: center;
-            line-height: 1.3;
+            font-size: 2rem;
         }
-        
-        .word-en {
-            font-size: 1.5rem;
-            color: #1a73e8;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        
-        .meaning {
-            font-size: 1.3rem;
-            color: #ccc;
-            margin-bottom: 5px;
-        }
-        
-        .phonetic {
-            font-size: 1rem;
-            color: #666;
-            margin-bottom: 10px;
-        }
-        
-        .typing-area {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            position: relative;
-            margin-top: 10px;
-        }
-        
-        .input-display {
-            font-size: 1.8rem;
-            text-align: center;
-            margin-bottom: 25px;
-            min-height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 8px;
-            padding: 0 10px;
+
+        .back-button {
+            background-color: #666;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
             cursor: pointer;
-        }
-        
-        .letter {
+            text-decoration: none;
             display: inline-block;
-            padding: 10px 12px;
-            border-radius: 8px;
-            transition: all 0.3s;
-            background: #1a1a1a;
-            border: 1px solid #333;
-            min-width: 40px;
-            text-align: center;
-            font-weight: bold;
+            margin-bottom: 20px;
         }
-        
-        .letter.correct {
-            background: #1a331a;
-            border-color: #2d5a2d;
+
+        .back-button:hover {
+            background-color: #555;
+        }
+
+        .results-summary {
+            background-color: #222;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid #333;
+            text-align: center;
+        }
+
+        .summary-title {
+            color: #1a73e8;
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+        }
+
+        .summary-stats {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
             color: #4caf50;
         }
-        
-        .letter.incorrect {
-            background: #331a1a;
-            border-color: #5a2d2d;
-            color: #f44336;
-        }
-        
-        .letter.fixed {
-            background: #333311;
-            border-color: #5a5a2d;
-            color: #ffeb3b;
-        }
-        
-        .letter.current {
-            background: #1a1a33;
-            border-color: #2d2d5a;
-        }
-        
-        .letter.special {
-            background: transparent;
-            border: none;
-            color: #666;
-            min-width: auto;
-            padding: 0 5px;
-        }
-        
-        .hidden-input {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0;
-            cursor: pointer;
+
+        .stat-label {
+            color: #888;
+            font-size: 0.9rem;
         }
 
-        .next-btn {
-            z-index: 10;
-            width: 100%;
+        .words-results {
+            margin-bottom: 30px;
+        }
+
+        .result-item {
+            background-color: #222;
+            border: 1px solid #333;
+            border-radius: 10px;
             padding: 15px;
-            background: #2196f3;
+            margin-bottom: 10px;
+        }
+
+        .word-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .word-en {
+            font-size: 1.1rem;
+            color: #1a73e8;
+            flex: 1;
+        }
+
+        .level-change {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #888;
+        }
+
+        .level-old, .level-new {
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .level-old {
+            background: #333;
+            color: #ccc;
+        }
+
+        .level-up .level-new {
+            background: #1a331a;
+            color: #4caf50;
+        }
+
+        .level-down .level-new {
+            background: #331a1a;
+            color: #f44336;
+        }
+
+        .level-same .level-new {
+            background: #1a1a33;
+            color: #2196f3;
+        }
+
+        .level-arrow {
+            font-size: 1.2rem;
+        }
+
+        .letter-details {
+            margin: 10px 0;
+        }
+
+        .letter-breakdown {
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .letter-status {
+            display: inline-block;
+            padding: 2px 5px;
+            margin: 1px;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .letter-perfect {
+            background: #1a331a;
+            color: #4caf50;
+        }
+
+        .letter-error {
+            background: #331a1a;
+            color: #f44336;
+        }
+
+        .letter-fixed {
+            background: #333311;
+            color: #ffeb3b;
+        }
+
+        .letter-untouched {
+            background: #1a1a1a;
+            color: #666;
+        }
+
+        .word-result {
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            display: inline-block;
+        }
+
+        .word-passed {
+            background: #1a331a;
+            color: #4caf50;
+        }
+
+        .word-failed {
+            background: #331a1a;
+            color: #f44336;
+        }
+
+        .actions {
+            text-align: center;
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .continue-button {
+            background-color: #2196f3;
             color: white;
             border: none;
-            border-radius: 10px;
+            padding: 15px 30px;
+            border-radius: 8px;
             font-size: 1.1rem;
             cursor: pointer;
             transition: background 0.3s;
-            font-weight: 500;
-            letter-spacing: 0.5px;
-            margin-top: 10px;
-        }
-        
-        .next-btn:hover {
-            background: #1976d2;
-        }
-        
-        .next-btn:active {
-            transform: translateY(1px);
-        }
-        
-        .hidden {
-            display: none;
         }
 
-        @media (max-width: 480px) {
-            .container {
-                padding: 5px;
+        .continue-button:hover {
+            background-color: #1976d2;
+        }
+
+        .retry-button {
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .retry-button:hover {
+            background-color: #f57c00;
+        }
+
+        .no-results {
+            text-align: center;
+            color: #666;
+            padding: 40px;
+            font-style: italic;
+        }
+
+        @media (max-width: 600px) {
+            .word-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
             }
             
-            h1 {
+            .summary-stats {
+                gap: 10px;
+            }
+            
+            .stat-value {
                 font-size: 1.5rem;
-            }
-            
-            .input-display {
-                font-size: 1.5rem;
-                gap: 5px;
-            }
-            
-            .letter {
-                padding: 8px 10px;
-                min-width: 35px;
-                font-size: 1.3rem;
-            }
-            
-            .control-btn {
-                padding: 6px 10px;
-                font-size: 0.8rem;
-                min-width: 45px;
-            }
-            
-            .word-en {
-                font-size: 1.3rem;
-            }
-            
-            .meaning {
-                font-size: 1.1rem;
-            }
-            
-            .session-stats {
-                top: 10px;
-                right: 10px;
-                font-size: 0.8rem;
             }
         }
     </style>
@@ -297,513 +273,358 @@
 <body>
     <div class="container">
         <header>
-            <h1>Luyện gõ từ</h1>
+            <h1>Kết quả luyện gõ từ</h1>
+            <a href="index.html" class="back-button">← Về trang chủ</a>
         </header>
-        
-        <div class="session-stats" id="sessionStats"></div>
-        
-        <div class="controls">
-            <button class="control-btn" id="vnBtn">VN</button>
-            <button class="control-btn" id="enBtn">EN</button>
-            <div class="dropdown">
-                <button class="control-btn" id="speedBtn">1x</button>
-                <div class="dropdown-content">
-                    <button data-speed="0.5">0.5x</button>
-                    <button data-speed="0.75">0.75x</button>
-                    <button data-speed="1">1x</button>
-                    <button data-speed="1.25">1.25x</button>
-                    <button data-speed="1.5">1.5x</button>
-                    <button data-speed="1.75">1.75x</button>
-                </div>
-            </div>
-            <button class="control-btn" id="speakBtn">🔊</button>
+
+        <div class="results-summary" id="resultsSummary">
+            <!-- Tổng kết kết quả -->
         </div>
-        
-        <div class="word-display">
-            <div class="word-en hidden" id="wordEn"></div>
-            <div class="meaning hidden" id="meaning"></div>
-            <div class="phonetic hidden" id="phonetic"></div>
+
+        <div class="words-results" id="wordsResults">
+            <!-- Kết quả chi tiết từng từ -->
         </div>
-        
-        <div class="typing-area">
-            <div class="input-display" id="inputDisplay"></div>
-            <input type="text" id="hiddenInput" class="hidden-input" autocomplete="off" spellcheck="false" autofocus>
-            
-            <button class="next-btn hidden" id="nextBtn">Next</button>
-            <button class="next-btn hidden" id="finishBtn">Kết thúc</button>
+
+        <div class="actions">
+            <button class="continue-button" id="continueButton">Tiếp tục học</button>
+            <button class="retry-button" id="retryButton" style="display: none;">Luyện tập lại từ sai</button>
         </div>
     </div>
 
     <script>
-        // Biến toàn cục
-        let words = [];
-        let currentWordIndex = 0;
-        let currentWord = null;
-        let currentLetters = [];
-        let resultProgress = [];
-        let currentLetterIndex = 0;
-        let isVnVisible = false; // Ban đầu ẩn tiếng Việt
-        let isEnVisible = false; // Ban đầu ẩn tiếng Anh và phiên âm
-        let speechRate = parseFloat(localStorage.getItem('speechRate') || '1.0');
-        let isCompleted = false;
-        let hasSpoken = false;
+        let resultsData = null;
+        let updatedVocabularies = [];
+        let failedWords = [];
 
-        // Lưu kết quả thực tế của từng từ
-        let wordResults = {};
-
-        // Đối tượng ánh xạ các phím thường bị nhầm lẫn
-        const adjacentKeys = {
-            'q': ['w', 'a', 's'],
-            'w': ['q', 'e', 'a', 's', 'd'],
-            'e': ['w', 'r', 's', 'd', 'f'],
-            'r': ['e', 't', 'd', 'f', 'g'],
-            't': ['r', 'y', 'f', 'g', 'h'],
-            'y': ['t', 'u', 'g', 'h', 'j'],
-            'u': ['y', 'i', 'h', 'j', 'k'],
-            'i': ['u', 'o', 'j', 'k', 'l'],
-            'o': ['i', 'p', 'k', 'l'],
-            'p': ['o', 'l'],
-            'a': ['q', 'w', 's', 'z', 'x'],
-            's': ['q', 'w', 'e', 'a', 'd', 'z', 'x', 'c'],
-            'd': ['w', 'e', 'r', 's', 'f', 'x', 'c', 'v'],
-            'f': ['e', 'r', 't', 'd', 'g', 'c', 'v', 'b'],
-            'g': ['r', 't', 'y', 'f', 'h', 'v', 'b', 'n'],
-            'h': ['t', 'y', 'u', 'g', 'j', 'b', 'n', 'm'],
-            'j': ['y', 'u', 'i', 'h', 'k', 'n', 'm'],
-            'k': ['u', 'i', 'o', 'j', 'l', 'm'],
-            'l': ['i', 'o', 'p', 'k'],
-            'z': ['a', 's', 'x'],
-            'x': ['a', 's', 'd', 'z', 'c'],
-            'c': ['s', 'd', 'f', 'x', 'v'],
-            'v': ['d', 'f', 'g', 'c', 'b'],
-            'b': ['f', 'g', 'h', 'v', 'n'],
-            'n': ['g', 'h', 'j', 'b', 'm'],
-            'm': ['h', 'j', 'k', 'n']
-        };
-
-        // Hàm kiểm tra ký tự đặc biệt
-        function isSpecialChar(char) {
-            return /[\s\-'.,;:!?()]/.test(char);
-        }
-
-        // DOM Elements
-        const wordEnElement = document.getElementById('wordEn');
-        const meaningElement = document.getElementById('meaning');
-        const phoneticElement = document.getElementById('phonetic');
-        const inputDisplayElement = document.getElementById('inputDisplay');
-        const hiddenInput = document.getElementById('hiddenInput');
-        const speakBtn = document.getElementById('speakBtn');
-        const vnBtn = document.getElementById('vnBtn');
-        const enBtn = document.getElementById('enBtn');
-        const sessionStatsElement = document.getElementById('sessionStats');
-        const nextBtn = document.getElementById('nextBtn');
-        const finishBtn = document.getElementById('finishBtn');
-        const speedBtn = document.getElementById('speedBtn');
-        const dropdown = document.querySelector('.dropdown');
-        const speedOptions = document.querySelectorAll('.dropdown-content button');
-
-        // Lấy danh sách từ vựng từ chotyp.html
-        function getWordsToType() {
-            // Lấy từ localStorage
-            const selectedWords = JSON.parse(localStorage.getItem('selectedTypeWords')) || [];
-            
-            // Nếu không có từ, tạo dữ liệu mẫu
-            if (selectedWords.length === 0) {
-                console.log('Không có từ trong localStorage, tạo dữ liệu mẫu');
-                return [
-                    {w: "Apple", m: "quả táo", p: "/ˈæp.əl/"},
-                    {w: "Computer", m: "máy tính", p: "/kəmˈpjuː.tər/"},
-                    {w: "Hello", m: "xin chào", p: "/heˈləʊ/"},
-                    {w: "Book", m: "sách", p: "/bʊk/"},
-                    {w: "Pen", m: "bút", p: "/pen/"}
-                ];
-            }
-            
-            return selectedWords;
-        }
-
-        // Cập nhật thống kê
-        function updateSessionStats() {
-            const totalWords = words.length;
-            const currentWordNum = currentWordIndex + 1;
-            
-            let correctCount = 0;
-            let wrongCount = 0;
-            
-            // Tính kết quả thực tế từ wordResults
-            Object.values(wordResults).forEach(result => {
-                // Đếm số chữ cái đúng và sai trong chuỗi kết quả (bỏ qua ký tự đặc biệt)
-                const results = result.split(',');
-                let allCorrect = true;
-                
-                for (let i = 0; i < results.length; i++) {
-                    // Chỉ kiểm tra các ký tự không phải là đặc biệt
-                    if (results[i] !== '4' && results[i] !== '1' && results[i] !== '3') {
-                        allCorrect = false;
-                        break;
-                    }
+        // Lấy dữ liệu kết quả
+        function getResultsData() {
+            try {
+                // Lấy từ localStorage
+                const storedResults = localStorage.getItem('typingResults');
+                if (storedResults) {
+                    const results = JSON.parse(storedResults);
+                    localStorage.removeItem('typingResults'); // Xóa sau khi dùng
+                    return results;
                 }
-                
-                if (allCorrect) {
-                    correctCount++;
-                } else {
-                    wrongCount++;
-                }
-            });
+            } catch (error) {
+                console.error('Lỗi khi lấy dữ liệu từ localStorage:', error);
+            }
             
-            sessionStatsElement.textContent = `${totalWords}/${currentWordNum}/${correctCount}r/${wrongCount}w`;
+            return null;
         }
 
-        // Khởi tạo ứng dụng
-        function initApp() {
-            // Lấy danh sách từ
-            words = getWordsToType();
-            if (words.length === 0) {
-                showError('Không có từ để luyện gõ');
-                return;
-            }
-
-            // Cập nhật tốc độ đọc
-            speedBtn.textContent = `${speechRate}x`;
-
-            // Thêm event listeners
-            document.addEventListener('keydown', handleKeyPress);
-            inputDisplayElement.addEventListener('click', focusHiddenInput);
-            speakBtn.addEventListener('click', speakWord);
-            vnBtn.addEventListener('click', toggleVnDisplay);
-            enBtn.addEventListener('click', toggleEnDisplay);
-            nextBtn.addEventListener('click', goToNextWord);
-            finishBtn.addEventListener('click', finishSession);
+        // Tính thời gian tiếp theo dựa trên level
+        function calculateNextTime(level) {
+            const now = Date.now();
+            const minute = 60 * 1000;
+            const hour = 60 * minute;
+            const day = 24 * hour;
             
-            // Xử lý input ẩn
-            hiddenInput.addEventListener('input', handleHiddenInput);
-
-            // Speed options
-            speedOptions.forEach(option => {
-                option.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    speechRate = parseFloat(this.getAttribute('data-speed'));
-                    speedBtn.textContent = `${speechRate}x`;
-                    localStorage.setItem('speechRate', speechRate.toString());
-                    dropdown.classList.remove('active');
-                });
-            });
-            
-            // Đóng dropdown khi click ra ngoài
-            document.addEventListener('click', function(e) {
-                if (!dropdown.contains(e.target)) {
-                    dropdown.classList.remove('active');
-                }
-            });
-            
-            // Toggle dropdown
-            speedBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                dropdown.classList.toggle('active');
-            });
-
-            // Tải từ đầu tiên
-            loadCurrentWord();
-            
-            // Focus input ẩn ngay lập tức để bàn phím hiện lên
-            setTimeout(focusHiddenInput, 100);
-        }
-
-        // Tải từ hiện tại
-        function loadCurrentWord() {
-            currentWord = words[currentWordIndex];
-            isCompleted = false;
-            hasSpoken = false;
-            nextBtn.classList.add('hidden');
-            finishBtn.classList.add('hidden');
-
-            // Cập nhật nội dung các phần tử
-            wordEnElement.textContent = currentWord.w || '';
-            meaningElement.textContent = currentWord.m || '';
-            phoneticElement.textContent = currentWord.p || '';
-
-            // Ẩn tất cả thông tin ban đầu
-            wordEnElement.classList.add('hidden');
-            meaningElement.classList.add('hidden');
-            phoneticElement.classList.add('hidden');
-            isVnVisible = false;
-            isEnVisible = false;
-            vnBtn.classList.remove('active');
-            enBtn.classList.remove('active');
-
-            // Tách từ thành các chữ cái
-            currentLetters = currentWord.w.split('');
-
-            // Khởi tạo kết quả - ký tự đặc biệt được đánh dấu là 4 (đã hoàn thành)
-            resultProgress = currentLetters.map(letter => 
-                isSpecialChar(letter) ? 4 : 0
-            );
-
-            // Tìm vị trí đầu tiên không phải ký tự đặc biệt
-            currentLetterIndex = 0;
-            while (currentLetterIndex < currentLetters.length && 
-                   isSpecialChar(currentLetters[currentLetterIndex])) {
-                currentLetterIndex++;
-            }
-
-            updateInputDisplay();
-            updateSessionStats();
-            
-            // Tự động phát âm từ
-            setTimeout(speakWord, 500);
-        }
-
-        // Cập nhật hiển thị input
-        function updateInputDisplay() {
-            inputDisplayElement.innerHTML = '';
-
-            currentLetters.forEach((letter, index) => {
-                const letterSpan = document.createElement('span');
-                letterSpan.className = 'letter';
-                const state = resultProgress[index];
-                const isCurrent = index === currentLetterIndex && !isCompleted;
-
-                // Xử lý ký tự đặc biệt
-                if (isSpecialChar(letter)) {
-                    letterSpan.textContent = letter;
-                    letterSpan.classList.add('special');
-                } else {
-                    switch (state) {
-                        case 1: // đúng ngay
-                            letterSpan.textContent = letter;
-                            letterSpan.classList.add('correct');
-                            break;
-                        case 2: // sai
-                            letterSpan.textContent = '_';
-                            letterSpan.classList.add('incorrect');
-                            break;
-                        case 3: // sửa sai thành đúng
-                            letterSpan.textContent = letter;
-                            letterSpan.classList.add('fixed');
-                            break;
-                        case 0: // chưa gõ
-                        default:
-                            letterSpan.textContent = '_';
-                            break;
-                    }
-
-                    if (isCurrent) letterSpan.classList.add('current');
-                }
-
-                inputDisplayElement.appendChild(letterSpan);
-            });
-
-            // Kiểm tra hoàn thành từ (chỉ kiểm tra các ký tự không phải đặc biệt)
-            const allTyped = resultProgress.every((state, index) => 
-                isSpecialChar(currentLetters[index]) || state !== 0
-            );
-            
-            if (allTyped && !isCompleted) {
-                isCompleted = true;
-                
-                // Lưu kết quả THỰC TẾ vào wordResults
-                wordResults[currentWordIndex] = resultProgress.join(',');
-                
-                // Phát âm thanh khi hoàn thành từ
-                setTimeout(speakWord, 300);
-                
-                // Hiển thị nút tiếp theo
-                if (currentWordIndex < words.length - 1) {
-                    nextBtn.classList.remove('hidden');
-                } else {
-                    finishBtn.classList.remove('hidden');
-                }
-                
-                updateSessionStats();
-            }
-        }
-
-        // Xử lý gõ phím với khả năng chấp nhận phím gần kề
-        function handleTyping(typedChar) {
-            if (currentLetterIndex >= currentLetters.length || isCompleted) return;
-
-            // Bỏ qua nếu đây là ký tự đặc biệt (đã được xử lý tự động)
-            if (isSpecialChar(currentLetters[currentLetterIndex])) {
-                // Chuyển đến ký tự tiếp theo không phải đặc biệt
-                currentLetterIndex++;
-                while (currentLetterIndex < currentLetters.length && 
-                       isSpecialChar(currentLetters[currentLetterIndex])) {
-                    currentLetterIndex++;
-                }
-                updateInputDisplay();
-                focusHiddenInput();
-                return;
-            }
-
-            const correctChar = currentLetters[currentLetterIndex].toLowerCase();
-            let isCorrect = typedChar === correctChar;
-
-            // Nếu gõ sai nhưng là phím gần kề thì vẫn tính là đúng
-            if (!isCorrect && adjacentKeys[correctChar] && adjacentKeys[correctChar].includes(typedChar)) {
-                isCorrect = true;
-            }
-
-            const currentState = resultProgress[currentLetterIndex];
-
-            if (currentState === 0) {
-                // Lần đầu gõ
-                if (isCorrect) {
-                    resultProgress[currentLetterIndex] = 1; // đúng ngay
-                } else {
-                    resultProgress[currentLetterIndex] = 2; // sai
-                }
-            } else if (currentState === 2 && isCorrect) {
-                // Đã sai rồi, giờ gõ đúng → trạng thái 3
-                resultProgress[currentLetterIndex] = 3;
-            }
-
-            // Chỉ chuyển sang chữ tiếp theo khi đã gõ đúng (1 hoặc 3)
-            if (resultProgress[currentLetterIndex] === 1 || resultProgress[currentLetterIndex] === 3) {
-                currentLetterIndex++;
-                
-                // Bỏ qua các ký tự đặc biệt tiếp theo
-                while (currentLetterIndex < currentLetters.length && 
-                       isSpecialChar(currentLetters[currentLetterIndex])) {
-                    currentLetterIndex++;
-                }
-            }
-
-            updateInputDisplay();
-            focusHiddenInput();
-        }
-
-        // Xử lý phím từ người dùng
-        function handleKeyPress(event) {
-            if (event.key.length === 1 && /[a-zA-Z]/.test(event.key)) {
-                handleTyping(event.key.toLowerCase());
-                event.preventDefault();
-            }
-        }
-
-        // Xử lý input ẩn
-        function handleHiddenInput(event) {
-            const value = event.target.value.toLowerCase();
-            if (value.length > 0 && !isCompleted) {
-                handleTyping(value.charAt(0));
-                event.target.value = '';
-            }
-        }
-
-        // Focus input ẩn
-        function focusHiddenInput() {
-            if (!isCompleted) {
-                hiddenInput.focus();
-            }
-        }
-
-        // Chuyển đến từ tiếp theo
-        function goToNextWord() {
-            window.speechSynthesis.cancel();
-            if (currentWordIndex < words.length - 1) {
-                currentWordIndex++;
-                loadCurrentWord();
-            }
-            focusHiddenInput();
-        }
-
-        // Kết thúc phiên học
-        function finishSession() {
-            // Đảm bảo tất cả các từ đều có kết quả
-            words.forEach((word, index) => {
-                if (!wordResults[index]) {
-                    // Nếu từ chưa có kết quả (chưa hoàn thành), tạo kết quả mặc định
-                    // Ký tự đặc biệt được đánh dấu là 4, các ký tự khác là 2 (sai)
-                    const defaultResult = word.w.split('').map(letter => 
-                        isSpecialChar(letter) ? '4' : '2'
-                    ).join(',');
-                    wordResults[index] = defaultResult;
-                }
-            });
-
-            // Lưu kết quả và chuyển hướng
-            const resultsData = {
-                words: words,
-                results: wordResults,
-                timestamp: Date.now()
+            // Thời gian cho từng level
+            const intervals = {
+                1: 0,           // Level 1: 0 phút
+                2: 15 * minute, // Level 2: 15 phút
+                3: 1 * day,     // Level 3: 1 ngày
+                4: 1 * day,     // Level 4: 1 ngày
+                5: 3 * day,     // Level 5: 3 ngày
+                6: 7 * day,     // Level 6: 7 ngày
+                7: 20 * day,    // Level 7: 20 ngày
+                8: 30 * day,    // Level 8: 30 ngày
+                9: 90 * day,    // Level 9: 90 ngày
             };
             
+            // Level 10 trở lên: 180 ngày
+            return now + (level in intervals ? intervals[level] : 180 * day);
+        }
+
+        // Kiểm tra từ có vượt qua không (tỷ lệ 5 chữ có 1 lỗi)
+        function checkIfWordPassed(resultString) {
+            if (!resultString) return false;
+            
+            const results = resultString.split(',');
+            const totalLetters = results.length;
+            
+            // Đếm số lỗi (2 và 3)
+            let errorCount = 0;
+            results.forEach(result => {
+                if (result === '2' || result === '3') {
+                    errorCount++;
+                }
+            });
+            
+            // Tính số lỗi cho phép: cứ 5 chữ cho phép 1 lỗi
+            let allowedErrors = Math.floor(totalLetters / 5);
+            
+            return errorCount <= allowedErrors;
+        }
+
+        // Xử lý kết quả
+        function processResults() {
+            const resultsData = getResultsData();
+            if (!resultsData) {
+                console.error('Không có dữ liệu kết quả');
+                showNoResults();
+                return;
+            }
+
             try {
-                localStorage.setItem('typingResults', JSON.stringify(resultsData));
-                window.location.href = 'savtyp.html';
+                const vocabularies = JSON.parse(localStorage.getItem('vocabularies') || '[]');
+                const now = Date.now();
+                
+                let totalUp = 0;
+                let totalDown = 0;
+                let totalSame = 0;
+                failedWords = [];
+
+                resultsData.processedResults = resultsData.words.map((word, index) => {
+                    const resultString = resultsData.results[index];
+                    
+                    // Tìm từ trong danh sách từ vựng
+                    const vocabIndex = vocabularies.findIndex(vocab => 
+                        vocab.w === word.w
+                    );
+
+                    let oldLevel = 0;
+                    let newLevel = 0;
+                    let levelChange = 'same';
+                    let passed = false;
+
+                    if (vocabIndex !== -1) {
+                        oldLevel = vocabularies[vocabIndex].tl || 0;
+                        
+                        // Kiểm tra từ có vượt qua không
+                        passed = checkIfWordPassed(resultString);
+                        
+                        if (passed) {
+                            // Tăng level lên 1, không giới hạn
+                            newLevel = oldLevel + 1;
+                            levelChange = 'up';
+                            totalUp++;
+                        } else {
+                            // Không vượt qua, reset về level 1
+                            newLevel = 1;
+                            if (oldLevel > 1) {
+                                levelChange = 'down';
+                                totalDown++;
+                            } else {
+                                levelChange = 'same';
+                                totalSame++;
+                            }
+                            
+                            failedWords.push(word);
+                        }
+
+                        // Cập nhật thông tin từ
+                        vocabularies[vocabIndex].tl = newLevel;
+                        vocabularies[vocabIndex].tlt = now;
+                        vocabularies[vocabIndex].tnt = calculateNextTime(newLevel);
+                    }
+
+                    return {
+                        word: word,
+                        resultString: resultString,
+                        passed: passed,
+                        oldLevel: oldLevel,
+                        newLevel: newLevel,
+                        levelChange: levelChange
+                    };
+                });
+
+                updatedVocabularies = vocabularies;
+                localStorage.setItem('vocabularies', JSON.stringify(vocabularies));
+
+                resultsData.summary = {
+                    total: resultsData.words.length,
+                    up: totalUp,
+                    down: totalDown,
+                    same: totalSame,
+                    failed: failedWords.length
+                };
+
+                return resultsData;
+
             } catch (error) {
-                console.error('Lỗi khi lưu kết quả:', error);
-                alert('Có lỗi xảy ra khi lưu kết quả!');
-                window.location.href = 'chotyp.html';
+                console.error('Lỗi xử lý kết quả:', error);
+                return null;
             }
         }
 
-        // Hiển thị lỗi
-        function showError(message) {
-            inputDisplayElement.innerHTML = `
-                <div style="color: #f44336; text-align: center; padding: 40px;">
-                    <h3>❌ ${message}</h3>
-                    <button onclick="window.location.href='chotyp.html'" style="margin-top: 15px; padding: 10px 20px; background: #2196f3; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                        Quay lại chọn từ
-                    </button>
+        // Hiển thị tổng kết
+        function displaySummary(resultsData) {
+            const summaryElement = document.getElementById('resultsSummary');
+            
+            if (!resultsData || !resultsData.summary) {
+                summaryElement.innerHTML = '<div class="no-results">Không có kết quả để hiển thị</div>';
+                return;
+            }
+
+            const { total, up, down, same, failed } = resultsData.summary;
+
+            summaryElement.innerHTML = `
+                <div class="summary-title">Tổng kết phiên học gõ từ</div>
+                <div class="summary-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">${total}</div>
+                        <div class="stat-label">Tổng từ</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" style="color: #4caf50">${up}</div>
+                        <div class="stat-label">Lên level</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" style="color: #f44336">${down}</div>
+                        <div class="stat-label">Xuống level</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" style="color: #2196f3">${same}</div>
+                        <div class="stat-label">Giữ nguyên</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" style="color: #ff9800">${failed}</div>
+                        <div class="stat-label">Cần luyện lại</div>
+                    </div>
                 </div>
             `;
         }
 
-        // Hiển thị/ẩn tiếng Việt
-        function toggleVnDisplay() {
-            isVnVisible = !isVnVisible;
-            if (isVnVisible) {
-                meaningElement.classList.remove('hidden');
-                vnBtn.classList.add('active');
-            } else {
-                meaningElement.classList.add('hidden');
-                vnBtn.classList.remove('active');
-            }
+        // Hiển thị chi tiết từng chữ cái
+        function getLetterDetails(resultString) {
+            if (!resultString) return '';
+            
+            const results = resultString.split(',');
+            let html = '<div class="letter-breakdown">';
+            
+            results.forEach((result, index) => {
+                let statusClass = 'letter-untouched';
+                let statusText = '?';
+                
+                switch(result) {
+                    case '0':
+                        statusClass = 'letter-untouched';
+                        statusText = '_';
+                        break;
+                    case '1':
+                        statusClass = 'letter-perfect';
+                        statusText = '✓';
+                        break;
+                    case '2':
+                        statusClass = 'letter-error';
+                        statusText = '✗';
+                        break;
+                    case '3':
+                        statusClass = 'letter-fixed';
+                        statusText = '✓';
+                        break;
+                }
+                
+                html += `<span class="letter-status ${statusClass}" title="Chữ ${index + 1}">${statusText}</span>`;
+            });
+            
+            html += '</div>';
+            return html;
         }
 
-        // Hiển thị/ẩn từ tiếng Anh và phiên âm
-        function toggleEnDisplay() {
-            isEnVisible = !isEnVisible;
-            if (isEnVisible) {
-                wordEnElement.classList.remove('hidden');
-                phoneticElement.classList.remove('hidden');
-                enBtn.classList.add('active');
-            } else {
-                wordEnElement.classList.add('hidden');
-                phoneticElement.classList.add('hidden');
-                enBtn.classList.remove('active');
-            }
-        }
-
-        // Đọc từ tiếng Anh
-        function speakWord() {
-            if (!currentWord) return;
+        // Hiển thị kết quả chi tiết
+        function displayDetailedResults(resultsData) {
+            const resultsElement = document.getElementById('wordsResults');
             
-            const word = currentWord.w;
-            if (!word) return;
-            
-            if (!('speechSynthesis' in window)) {
-                console.log('Trình duyệt không hỗ trợ Text-to-Speech');
+            if (!resultsData || !resultsData.processedResults) {
+                resultsElement.innerHTML = '<div class="no-results">Không có kết quả chi tiết</div>';
                 return;
             }
 
-            const utterance = new SpeechSynthesisUtterance(word);
-            utterance.lang = 'en-US';
-            utterance.rate = speechRate;
-            
-            hasSpoken = true;
-            window.speechSynthesis.cancel();
-            
-            try {
-                window.speechSynthesis.speak(utterance);
-            } catch (error) {
-                console.log('Lỗi phát âm thanh:', error);
-                hasSpoken = false;
+            resultsElement.innerHTML = resultsData.processedResults.map(result => {
+                const levelClass = `level-${result.levelChange}`;
+                const resultClass = result.passed ? 'word-passed' : 'word-failed';
+                const resultText = result.passed ? '✅ Đạt' : '❌ Chưa đạt';
+                
+                const letterDetails = getLetterDetails(result.resultString);
+                
+                // Tính số lỗi và số lỗi cho phép
+                const results = result.resultString.split(',');
+                const totalLetters = results.length;
+                let errorCount = 0;
+                
+                results.forEach(r => {
+                    if (r === '2' || r === '3') errorCount++;
+                });
+                
+                let allowedErrors = Math.floor(totalLetters / 5);
+
+                return `
+                    <div class="result-item">
+                        <div class="word-header">
+                            <div class="word-en">${result.word.w}</div>
+                            <div class="level-change ${levelClass}">
+                                <span class="level-old">T-Lv${result.oldLevel}</span>
+                                <span class="level-arrow">→</span>
+                                <span class="level-new">T-Lv${result.newLevel}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="letter-details">
+                            ${letterDetails}
+                        </div>
+                        
+                        <div>
+                            <span class="word-result ${resultClass}">
+                                ${resultText} (${errorCount}/${allowedErrors} lỗi cho phép)
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Tiếp tục học
+        function continueLearning() {
+            window.location.href = 'chotyp.html';
+        }
+
+        // Luyện tập lại từ sai
+        function retryFailedWords() {
+            if (failedWords.length > 0) {
+                // Lưu danh sách từ sai vào localStorage
+                localStorage.setItem('selectedTypeWords', JSON.stringify(failedWords));
+                // Chuyển đến trang luyện gõ từ
+                window.location.href = 'typwor.html';
+            } else {
+                continueLearning();
             }
         }
 
-        // Khởi chạy ứng dụng
-        document.addEventListener('DOMContentLoaded', initApp);
+        // Hiển thị không có kết quả
+        function showNoResults() {
+            const summaryElement = document.getElementById('resultsSummary');
+            const resultsElement = document.getElementById('wordsResults');
+            
+            summaryElement.innerHTML = '<div class="no-results">Không có kết quả để hiển thị</div>';
+            resultsElement.innerHTML = '';
+            
+            document.getElementById('retryButton').style.display = 'none';
+        }
+
+        // Khởi tạo
+        function init() {
+            const resultsData = processResults();
+            
+            if (resultsData) {
+                displaySummary(resultsData);
+                displayDetailedResults(resultsData);
+                
+                // Hiển thị nút luyện tập lại nếu có từ sai
+                if (failedWords.length > 0) {
+                    document.getElementById('retryButton').style.display = 'block';
+                }
+            } else {
+                showNoResults();
+            }
+
+            document.getElementById('continueButton').addEventListener('click', continueLearning);
+            document.getElementById('retryButton').addEventListener('click', retryFailedWords);
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
