@@ -206,6 +206,24 @@
             border-color: #2d2d5a;
         }
         
+        .letter.special {
+            background: transparent;
+            border: none;
+            color: #888;
+            min-width: auto;
+            padding: 0 8px;
+            font-weight: normal;
+        }
+        
+        .letter.space {
+            background: transparent;
+            border: 1px dashed #444;
+            color: #888;
+            min-width: 60px;
+            padding: 10px 5px;
+            font-weight: normal;
+        }
+        
         .hidden-input {
             position: absolute;
             left: 0;
@@ -262,6 +280,11 @@
                 padding: 8px 10px;
                 min-width: 35px;
                 font-size: 1.3rem;
+            }
+            
+            .letter.space {
+                min-width: 40px;
+                padding: 8px 3px;
             }
             
             .control-btn {
@@ -334,8 +357,8 @@
         let currentLetters = [];
         let resultProgress = [];
         let currentLetterIndex = 0;
-        let isVnVisible = false; // Ban đầu ẩn tiếng Việt
-        let isEnVisible = false; // Ban đầu ẩn tiếng Anh và phiên âm
+        let isVnVisible = false;
+        let isEnVisible = false;
         let speechRate = parseFloat(localStorage.getItem('speechRate') || '1.0');
         let isCompleted = false;
         let hasSpoken = false;
@@ -373,6 +396,19 @@
             'm': ['h', 'j', 'k', 'n']
         };
 
+        // Hàm kiểm tra ký tự đặc biệt
+        function isSpecialChar(char) {
+            return /[\s\-'.,;:!?()]/.test(char);
+        }
+
+        // Hàm xác định loại ký tự đặc biệt để hiển thị
+        function getSpecialCharDisplay(char) {
+            if (char === ' ') {
+                return { display: '␣', className: 'space' };
+            }
+            return { display: char, className: 'special' };
+        }
+
         // DOM Elements
         const wordEnElement = document.getElementById('wordEn');
         const meaningElement = document.getElementById('meaning');
@@ -394,15 +430,15 @@
             // Lấy từ localStorage
             const selectedWords = JSON.parse(localStorage.getItem('selectedTypeWords')) || [];
             
-            // Nếu không có từ, tạo dữ liệu mẫu
+            // Nếu không có từ, tạo dữ liệu mẫu với các từ có ký tự đặc biệt
             if (selectedWords.length === 0) {
                 console.log('Không có từ trong localStorage, tạo dữ liệu mẫu');
                 return [
-                    {w: "Apple", m: "quả táo", p: "/ˈæp.əl/"},
-                    {w: "Computer", m: "máy tính", p: "/kəmˈpjuː.tər/"},
-                    {w: "Hello", m: "xin chào", p: "/heˈləʊ/"},
-                    {w: "Book", m: "sách", p: "/bʊk/"},
-                    {w: "Pen", m: "bút", p: "/pen/"}
+                    {w: "Hello world", m: "xin chào thế giới", p: "/heˈləʊ wɜːrld/"},
+                    {w: "Computer science", m: "khoa học máy tính", p: "/kəmˈpjuː.tər ˈsaɪ.əns/"},
+                    {w: "Apple-pie", m: "bánh táo", p: "/ˈæp.əl paɪ/"},
+                    {w: "Book-case", m: "kệ sách", p: "/bʊk keɪs/"},
+                    {w: "Pen and paper", m: "bút và giấy", p: "/pen ənd ˈpeɪ.pər/"}
                 ];
             }
             
@@ -419,11 +455,17 @@
             
             // Tính kết quả thực tế từ wordResults
             Object.values(wordResults).forEach(result => {
-                // Đếm số chữ cái đúng và sai trong chuỗi kết quả
-                const correctLetters = result.split(',').filter(r => r === '1' || r === '3').length;
-                const totalLetters = result.split(',').length;
+                const results = result.split(',');
+                let allCorrect = true;
                 
-                if (correctLetters === totalLetters) {
+                for (let i = 0; i < results.length; i++) {
+                    if (results[i] !== '4' && results[i] !== '1' && results[i] !== '3') {
+                        allCorrect = false;
+                        break;
+                    }
+                }
+                
+                if (allCorrect) {
                     correctCount++;
                 } else {
                     wrongCount++;
@@ -513,8 +555,17 @@
             // Tách từ thành các chữ cái
             currentLetters = currentWord.w.split('');
 
-            resultProgress = Array(currentLetters.length).fill(0);
+            // Khởi tạo kết quả - ký tự đặc biệt được đánh dấu là 4 (đã hoàn thành)
+            resultProgress = currentLetters.map(letter => 
+                isSpecialChar(letter) ? 4 : 0
+            );
+
+            // Tìm vị trí đầu tiên không phải ký tự đặc biệt
             currentLetterIndex = 0;
+            while (currentLetterIndex < currentLetters.length && 
+                   isSpecialChar(currentLetters[currentLetterIndex])) {
+                currentLetterIndex++;
+            }
 
             updateInputDisplay();
             updateSessionStats();
@@ -529,218 +580,41 @@
 
             currentLetters.forEach((letter, index) => {
                 const letterSpan = document.createElement('span');
-                letterSpan.className = 'letter';
                 const state = resultProgress[index];
                 const isCurrent = index === currentLetterIndex && !isCompleted;
 
-                switch (state) {
-                    case 1: // đúng ngay
-                        letterSpan.textContent = letter;
-                        letterSpan.classList.add('correct');
-                        break;
-                    case 2: // sai
-                        letterSpan.textContent = '_';
-                        letterSpan.classList.add('incorrect');
-                        break;
-                    case 3: // sửa sai thành đúng
-                        letterSpan.textContent = letter;
-                        letterSpan.classList.add('fixed');
-                        break;
-                    case 0: // chưa gõ
-                    default:
-                        letterSpan.textContent = '_';
-                        break;
-                }
-
-                if (isCurrent) letterSpan.classList.add('current');
-                inputDisplayElement.appendChild(letterSpan);
-            });
-
-            // Kiểm tra hoàn thành từ
-            const allTyped = !resultProgress.includes(0);
-            if (allTyped && !isCompleted) {
-                isCompleted = true;
-                
-                // Lưu kết quả THỰC TẾ vào wordResults
-                wordResults[currentWordIndex] = resultProgress.join(',');
-                
-                // Phát âm thanh khi hoàn thành từ
-                setTimeout(speakWord, 300);
-                
-                // Hiển thị nút tiếp theo
-                if (currentWordIndex < words.length - 1) {
-                    nextBtn.classList.remove('hidden');
+                // Xử lý ký tự đặc biệt
+                if (isSpecialChar(letter)) {
+                    const specialChar = getSpecialCharDisplay(letter);
+                    letterSpan.textContent = specialChar.display;
+                    letterSpan.className = `letter ${specialChar.className}`;
+                    
+                    // DEBUG: Thêm border để dễ nhìn thấy
+                    if (letter === ' ') {
+                        letterSpan.style.border = '1px dashed #666';
+                        letterSpan.style.minWidth = '60px';
+                    }
                 } else {
-                    finishBtn.classList.remove('hidden');
-                }
-                
-                updateSessionStats();
-            }
-        }
+                    letterSpan.className = 'letter';
+                    
+                    switch (state) {
+                        case 1: // đúng ngay
+                            letterSpan.textContent = letter;
+                            letterSpan.classList.add('correct');
+                            break;
+                        case 2: // sai
+                            letterSpan.textContent = '_';
+                            letterSpan.classList.add('incorrect');
+                            break;
+                        case 3: // sửa sai thành đúng
+                            letterSpan.textContent = letter;
+                            letterSpan.classList.add('fixed');
+                            break;
+                        case 0: // chưa gõ
+                        default:
+                            letterSpan.textContent = '_';
+                            break;
+                    }
 
-        // Xử lý gõ phím với khả năng chấp nhận phím gần kề
-        function handleTyping(typedChar) {
-            if (currentLetterIndex >= currentLetters.length || isCompleted) return;
-
-            const correctChar = currentLetters[currentLetterIndex].toLowerCase();
-            let isCorrect = typedChar === correctChar;
-
-            // Nếu gõ sai nhưng là phím gần kề thì vẫn tính là đúng
-            if (!isCorrect && adjacentKeys[correctChar] && adjacentKeys[correctChar].includes(typedChar)) {
-                isCorrect = true;
-            }
-
-            const currentState = resultProgress[currentLetterIndex];
-
-            if (currentState === 0) {
-                // Lần đầu gõ
-                if (isCorrect) {
-                    resultProgress[currentLetterIndex] = 1; // đúng ngay
-                } else {
-                    resultProgress[currentLetterIndex] = 2; // sai
-                }
-            } else if (currentState === 2 && isCorrect) {
-                // Đã sai rồi, giờ gõ đúng → trạng thái 3
-                resultProgress[currentLetterIndex] = 3;
-            }
-
-            // Chỉ chuyển sang chữ tiếp theo khi đã gõ đúng (1 hoặc 3)
-            if (resultProgress[currentLetterIndex] === 1 || resultProgress[currentLetterIndex] === 3) {
-                currentLetterIndex++;
-            }
-
-            updateInputDisplay();
-            focusHiddenInput();
-        }
-
-        // Xử lý phím từ người dùng
-        function handleKeyPress(event) {
-            if (event.key.length === 1 && /[a-zA-Z]/.test(event.key)) {
-                handleTyping(event.key.toLowerCase());
-                event.preventDefault();
-            }
-        }
-
-        // Xử lý input ẩn
-        function handleHiddenInput(event) {
-            const value = event.target.value.toLowerCase();
-            if (value.length > 0 && !isCompleted) {
-                handleTyping(value.charAt(0));
-                event.target.value = '';
-            }
-        }
-
-        // Focus input ẩn
-        function focusHiddenInput() {
-            if (!isCompleted) {
-                hiddenInput.focus();
-            }
-        }
-
-        // Chuyển đến từ tiếp theo
-        function goToNextWord() {
-            window.speechSynthesis.cancel();
-            if (currentWordIndex < words.length - 1) {
-                currentWordIndex++;
-                loadCurrentWord();
-            }
-            focusHiddenInput();
-        }
-
-        // Kết thúc phiên học
-        function finishSession() {
-            // Đảm bảo tất cả các từ đều có kết quả
-            words.forEach((word, index) => {
-                if (!wordResults[index]) {
-                    // Nếu từ chưa có kết quả (chưa hoàn thành), tạo kết quả mặc định (toàn sai)
-                    wordResults[index] = Array(word.w.length).fill('2').join(',');
-                }
-            });
-
-            // Lưu kết quả và chuyển hướng
-            const resultsData = {
-                words: words,
-                results: wordResults,
-                timestamp: Date.now()
-            };
-            
-            try {
-                localStorage.setItem('typingResults', JSON.stringify(resultsData));
-                window.location.href = 'savtyp.html';
-            } catch (error) {
-                console.error('Lỗi khi lưu kết quả:', error);
-                alert('Có lỗi xảy ra khi lưu kết quả!');
-                window.location.href = 'chotyp.html';
-            }
-        }
-
-        // Hiển thị lỗi
-        function showError(message) {
-            inputDisplayElement.innerHTML = `
-                <div style="color: #f44336; text-align: center; padding: 40px;">
-                    <h3>❌ ${message}</h3>
-                    <button onclick="window.location.href='chotyp.html'" style="margin-top: 15px; padding: 10px 20px; background: #2196f3; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                        Quay lại chọn từ
-                    </button>
-                </div>
-            `;
-        }
-
-        // Hiển thị/ẩn tiếng Việt
-        function toggleVnDisplay() {
-            isVnVisible = !isVnVisible;
-            if (isVnVisible) {
-                meaningElement.classList.remove('hidden');
-                vnBtn.classList.add('active');
-            } else {
-                meaningElement.classList.add('hidden');
-                vnBtn.classList.remove('active');
-            }
-        }
-
-        // Hiển thị/ẩn từ tiếng Anh và phiên âm
-        function toggleEnDisplay() {
-            isEnVisible = !isEnVisible;
-            if (isEnVisible) {
-                wordEnElement.classList.remove('hidden');
-                phoneticElement.classList.remove('hidden');
-                enBtn.classList.add('active');
-            } else {
-                wordEnElement.classList.add('hidden');
-                phoneticElement.classList.add('hidden');
-                enBtn.classList.remove('active');
-            }
-        }
-
-        // Đọc từ tiếng Anh
-        function speakWord() {
-            if (!currentWord) return;
-            
-            const word = currentWord.w;
-            if (!word) return;
-            
-            if (!('speechSynthesis' in window)) {
-                console.log('Trình duyệt không hỗ trợ Text-to-Speech');
-                return;
-            }
-
-            const utterance = new SpeechSynthesisUtterance(word);
-            utterance.lang = 'en-US';
-            utterance.rate = speechRate;
-            
-            hasSpoken = true;
-            window.speechSynthesis.cancel();
-            
-            try {
-                window.speechSynthesis.speak(utterance);
-            } catch (error) {
-                console.log('Lỗi phát âm thanh:', error);
-                hasSpoken = false;
-            }
-        }
-
-        // Khởi chạy ứng dụng
-        document.addEventListener('DOMContentLoaded', initApp);
-    </script>
-</body>
-</html>
+                    if (isCurrent) letterSpan.classList.add('current');
+           
