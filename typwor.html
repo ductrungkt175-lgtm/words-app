@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Luyện gõ từ</title>
     <style>
         * {
@@ -10,6 +10,10 @@
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
         
         body {
@@ -19,7 +23,7 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
         
         .container {
@@ -74,7 +78,7 @@
             cursor: pointer;
             transition: all 0.3s;
             min-width: 50px;
-            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
         
         .control-btn:hover {
@@ -174,21 +178,12 @@
             border: 2px dashed #333;
             border-radius: 10px;
             padding: 15px;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
         
         .input-display:focus {
             outline: none;
             border-color: #1a73e8;
-        }
-        
-        .input-display.active {
-            border-color: #1a73e8;
-            background: rgba(26, 115, 232, 0.1);
         }
         
         .letter {
@@ -244,26 +239,14 @@
             font-weight: normal;
         }
         
-        .mobile-input {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 60px;
-            background: transparent;
-            border: none;
-            color: transparent;
-            font-size: 16px;
-            padding: 10px;
+        .hidden-input {
+            position: absolute;
+            left: -1000px;
+            top: -1000px;
+            width: 1px;
+            height: 1px;
             opacity: 0;
-            z-index: 1000;
-            -webkit-appearance: none;
-            -webkit-user-select: text;
-        }
-        
-        .mobile-input:focus {
-            outline: none;
-            background: transparent;
+            pointer-events: none;
         }
 
         .next-btn {
@@ -280,7 +263,7 @@
             font-weight: 500;
             letter-spacing: 0.5px;
             margin-top: 10px;
-            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
         
         .next-btn:hover {
@@ -292,32 +275,15 @@
         }
         
         .hidden {
-            display: none;
+            display: none !important;
         }
 
-        .typing-hint {
+        .mobile-keyboard-hint {
             text-align: center;
             color: #666;
             font-size: 0.9rem;
             margin-top: 10px;
             display: none;
-        }
-
-        @media (max-width: 768px) {
-            .typing-hint {
-                display: block;
-            }
-            
-            .input-display {
-                min-height: 100px;
-                font-size: 1.6rem;
-            }
-            
-            .letter {
-                padding: 12px 14px;
-                min-width: 45px;
-                font-size: 1.4rem;
-            }
         }
 
         @media (max-width: 480px) {
@@ -332,22 +298,21 @@
             .input-display {
                 font-size: 1.5rem;
                 gap: 5px;
-                min-height: 90px;
             }
             
             .letter {
-                padding: 10px 12px;
-                min-width: 40px;
+                padding: 8px 10px;
+                min-width: 35px;
                 font-size: 1.3rem;
             }
             
             .letter.space {
-                min-width: 50px;
-                padding: 10px 3px;
+                min-width: 40px;
+                padding: 8px 3px;
             }
             
             .control-btn {
-                padding: 8px 10px;
+                padding: 6px 10px;
                 font-size: 0.8rem;
                 min-width: 45px;
             }
@@ -365,10 +330,26 @@
                 right: 10px;
                 font-size: 0.8rem;
             }
+
+            .mobile-keyboard-hint {
+                display: block;
+            }
+        }
+
+        @media (max-height: 600px) {
+            .word-display {
+                margin-bottom: 10px;
+            }
             
-            .mobile-input {
-                height: 50px;
-                font-size: 16px;
+            .input-display {
+                margin-bottom: 15px;
+                min-height: 60px;
+                padding: 10px;
+            }
+            
+            .letter {
+                padding: 6px 8px;
+                min-width: 30px;
             }
         }
     </style>
@@ -405,20 +386,10 @@
         </div>
         
         <div class="typing-area">
-            <div class="input-display" id="inputDisplay" tabindex="0">
-                <!-- Các chữ cái sẽ được thêm vào đây bằng JavaScript -->
-            </div>
-            <div class="typing-hint" id="typingHint">👆 Chạm vào đây để hiện bàn phím</div>
+            <div class="input-display" id="inputDisplay" tabindex="0"></div>
+            <input type="text" id="hiddenInput" class="hidden-input" autocomplete="off" spellcheck="false" autocapitalize="off" autocorrect="off">
             
-            <!-- Input ẩn cho mobile -->
-            <input type="text" 
-                   id="mobileInput" 
-                   class="mobile-input" 
-                   autocomplete="off" 
-                   autocorrect="off" 
-                   autocapitalize="none" 
-                   spellcheck="false"
-                   inputmode="text">
+            <div class="mobile-keyboard-hint" id="mobileHint">Chạm vào ô trên để hiện bàn phím</div>
             
             <button class="next-btn hidden" id="nextBtn">Next</button>
             <button class="next-btn hidden" id="finishBtn">Kết thúc</button>
@@ -438,6 +409,7 @@
         let speechRate = parseFloat(localStorage.getItem('speechRate') || '1.0');
         let isCompleted = false;
         let hasSpoken = false;
+        let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
         // Lưu kết quả thực tế của từng từ
         let wordResults = {};
@@ -490,8 +462,7 @@
         const meaningElement = document.getElementById('meaning');
         const phoneticElement = document.getElementById('phonetic');
         const inputDisplayElement = document.getElementById('inputDisplay');
-        const mobileInput = document.getElementById('mobileInput');
-        const typingHint = document.getElementById('typingHint');
+        const hiddenInput = document.getElementById('hiddenInput');
         const speakBtn = document.getElementById('speakBtn');
         const vnBtn = document.getElementById('vnBtn');
         const enBtn = document.getElementById('enBtn');
@@ -501,17 +472,17 @@
         const speedBtn = document.getElementById('speedBtn');
         const dropdown = document.querySelector('.dropdown');
         const speedOptions = document.querySelectorAll('.dropdown-content button');
-
-        // Kiểm tra thiết bị di động
-        function isMobileDevice() {
-            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-                   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-        }
+        const mobileHint = document.getElementById('mobileHint');
 
         // Lấy danh sách từ vựng từ chotyp.html
         function getWordsToType() {
             // Lấy từ localStorage
-            const selectedWords = JSON.parse(localStorage.getItem('selectedTypeWords')) || [];
+            let selectedWords = [];
+            try {
+                selectedWords = JSON.parse(localStorage.getItem('selectedTypeWords')) || [];
+            } catch (e) {
+                console.error('Lỗi khi đọc từ localStorage:', e);
+            }
             
             // Nếu không có từ, tạo dữ liệu mẫu với các từ có ký tự đặc biệt
             if (selectedWords.length === 0) {
@@ -572,19 +543,24 @@
 
             // Thêm event listeners
             document.addEventListener('keydown', handleKeyPress);
-            inputDisplayElement.addEventListener('click', focusMobileInput);
-            inputDisplayElement.addEventListener('touchstart', handleTouchStart, { passive: false });
-            inputDisplayElement.addEventListener('touchend', handleTouchEnd, { passive: false });
+            inputDisplayElement.addEventListener('click', focusHiddenInput);
+            inputDisplayElement.addEventListener('touchstart', handleTouchStart);
+            inputDisplayElement.addEventListener('touchend', handleTouchEnd);
+            inputDisplayElement.addEventListener('focus', focusHiddenInput);
             speakBtn.addEventListener('click', speakWord);
             vnBtn.addEventListener('click', toggleVnDisplay);
             enBtn.addEventListener('click', toggleEnDisplay);
             nextBtn.addEventListener('click', goToNextWord);
             finishBtn.addEventListener('click', finishSession);
             
-            // Xử lý input mobile
-            mobileInput.addEventListener('input', handleMobileInput);
-            mobileInput.addEventListener('blur', handleMobileInputBlur);
-            mobileInput.addEventListener('focus', handleMobileInputFocus);
+            // Xử lý input ẩn
+            hiddenInput.addEventListener('input', handleHiddenInput);
+            hiddenInput.addEventListener('blur', function() {
+                // Trên mobile, khi bàn phím ẩn, focus lại để tiếp tục gõ
+                if (!isCompleted) {
+                    setTimeout(focusHiddenInput, 100);
+                }
+            });
 
             // Speed options
             speedOptions.forEach(option => {
@@ -592,7 +568,11 @@
                     e.stopPropagation();
                     speechRate = parseFloat(this.getAttribute('data-speed'));
                     speedBtn.textContent = `${speechRate}x`;
-                    localStorage.setItem('speechRate', speechRate.toString());
+                    try {
+                        localStorage.setItem('speechRate', speechRate.toString());
+                    } catch (e) {
+                        console.error('Lỗi khi lưu vào localStorage:', e);
+                    }
                     dropdown.classList.remove('active');
                 });
             });
@@ -612,33 +592,369 @@
 
             // Tải từ đầu tiên
             loadCurrentWord();
+            
+            // Focus input ẩn ngay lập tức để bàn phím hiện lên
+            setTimeout(focusHiddenInput, 300);
         }
 
-        // Xử lý touch start
+        // Xử lý touch events để tránh zoom không mong muốn
         function handleTouchStart(e) {
             e.preventDefault();
-            inputDisplayElement.classList.add('active');
+            focusHiddenInput();
         }
 
-        // Xử lý touch end
         function handleTouchEnd(e) {
             e.preventDefault();
-            focusMobileInput();
         }
 
-        // Focus input mobile
-        function focusMobileInput() {
-            if (!isCompleted) {
-                mobileInput.focus();
-                mobileInput.value = '';
-                inputDisplayElement.classList.add('active');
+        // Tải từ hiện tại
+        function loadCurrentWord() {
+            currentWord = words[currentWordIndex];
+            isCompleted = false;
+            hasSpoken = false;
+            nextBtn.classList.add('hidden');
+            finishBtn.classList.add('hidden');
+            mobileHint.classList.remove('hidden');
+
+            // Cập nhật nội dung các phần tử
+            wordEnElement.textContent = currentWord.w || '';
+            meaningElement.textContent = currentWord.m || '';
+            phoneticElement.textContent = currentWord.p || '';
+
+            // Ẩn tất cả thông tin ban đầu
+            wordEnElement.classList.add('hidden');
+            meaningElement.classList.add('hidden');
+            phoneticElement.classList.add('hidden');
+            isVnVisible = false;
+            isEnVisible = false;
+            vnBtn.classList.remove('active');
+            enBtn.classList.remove('active');
+
+            // Tách từ thành các chữ cái
+            currentLetters = currentWord.w.split('');
+
+            // Khởi tạo kết quả - ký tự đặc biệt được đánh dấu là 4 (đã hoàn thành)
+            resultProgress = currentLetters.map(letter => 
+                isSpecialChar(letter) ? 4 : 0
+            );
+
+            // Tìm vị trí đầu tiên không phải ký tự đặc biệt
+            currentLetterIndex = 0;
+            while (currentLetterIndex < currentLetters.length && 
+                   isSpecialChar(currentLetters[currentLetterIndex])) {
+                currentLetterIndex++;
+            }
+
+            updateInputDisplay();
+            updateSessionStats();
+            
+            // Tự động phát âm từ (chỉ trên desktop)
+            if (!isMobile) {
+                setTimeout(speakWord, 500);
+            }
+            
+            // Focus vào ô input
+            setTimeout(focusHiddenInput, 300);
+        }
+
+        // Cập nhật hiển thị input
+        function updateInputDisplay() {
+            inputDisplayElement.innerHTML = '';
+
+            currentLetters.forEach((letter, index) => {
+                const letterSpan = document.createElement('span');
+                const state = resultProgress[index];
+                const isCurrent = index === currentLetterIndex && !isCompleted;
+
+                // Xử lý ký tự đặc biệt
+                if (isSpecialChar(letter)) {
+                    const specialChar = getSpecialCharDisplay(letter);
+                    letterSpan.textContent = specialChar.display;
+                    letterSpan.className = `letter ${specialChar.className}`;
+                } else {
+                    letterSpan.className = 'letter';
+                    
+                    switch (state) {
+                        case 1: // đúng ngay
+                            letterSpan.textContent = letter;
+                            letterSpan.classList.add('correct');
+                            break;
+                        case 2: // sai
+                            letterSpan.textContent = '_';
+                            letterSpan.classList.add('incorrect');
+                            break;
+                        case 3: // sửa sai thành đúng
+                            letterSpan.textContent = letter;
+                            letterSpan.classList.add('fixed');
+                            break;
+                        case 0: // chưa gõ
+                        default:
+                            letterSpan.textContent = '_';
+                            break;
+                    }
+
+                    if (isCurrent) letterSpan.classList.add('current');
+                }
+
+                inputDisplayElement.appendChild(letterSpan);
+            });
+
+            // Kiểm tra hoàn thành từ (chỉ kiểm tra các ký tự không phải đặc biệt)
+            const allTyped = resultProgress.every((state, index) => 
+                isSpecialChar(currentLetters[index]) || state !== 0
+            );
+            
+            if (allTyped && !isCompleted) {
+                isCompleted = true;
+                mobileHint.classList.add('hidden');
                 
-                // Ẩn hint sau khi đã focus
-                setTimeout(() => {
-                    typingHint.style.opacity = '0.5';
-                }, 500);
+                // Lưu kết quả THỰC TẾ vào wordResults
+                wordResults[currentWordIndex] = resultProgress.join(',');
+                
+                // Phát âm thanh khi hoàn thành từ
+                setTimeout(speakWord, 300);
+                
+                // Hiển thị nút tiếp theo
+                if (currentWordIndex < words.length - 1) {
+                    nextBtn.classList.remove('hidden');
+                } else {
+                    finishBtn.classList.remove('hidden');
+                }
+                
+                updateSessionStats();
             }
         }
 
-        // Xử lý khi mobile input bị mất focus
-        function handleMob
+        // Xử lý gõ phím với khả năng chấp nhận phím gần kề
+        function handleTyping(typedChar) {
+            if (currentLetterIndex >= currentLetters.length || isCompleted) return;
+
+            // Bỏ qua nếu đây là ký tự đặc biệt (đã được xử lý tự động)
+            if (isSpecialChar(currentLetters[currentLetterIndex])) {
+                // Chuyển đến ký tự tiếp theo không phải đặc biệt
+                currentLetterIndex++;
+                while (currentLetterIndex < currentLetters.length && 
+                       isSpecialChar(currentLetters[currentLetterIndex])) {
+                    currentLetterIndex++;
+                }
+                updateInputDisplay();
+                focusHiddenInput();
+                return;
+            }
+
+            const correctChar = currentLetters[currentLetterIndex].toLowerCase();
+            let isCorrect = typedChar === correctChar;
+
+            // Nếu gõ sai nhưng là phím gần kề thì vẫn tính là đúng
+            if (!isCorrect && adjacentKeys[correctChar] && adjacentKeys[correctChar].includes(typedChar)) {
+                isCorrect = true;
+            }
+
+            const currentState = resultProgress[currentLetterIndex];
+
+            if (currentState === 0) {
+                // Lần đầu gõ
+                if (isCorrect) {
+                    resultProgress[currentLetterIndex] = 1; // đúng ngay
+                } else {
+                    resultProgress[currentLetterIndex] = 2; // sai
+                }
+            } else if (currentState === 2 && isCorrect) {
+                // Đã sai rồi, giờ gõ đúng → trạng thái 3
+                resultProgress[currentLetterIndex] = 3;
+            }
+
+            // Chỉ chuyển sang chữ tiếp theo khi đã gõ đúng (1 hoặc 3)
+            if (resultProgress[currentLetterIndex] === 1 || resultProgress[currentLetterIndex] === 3) {
+                currentLetterIndex++;
+                
+                // Bỏ qua các ký tự đặc biệt tiếp theo
+                while (currentLetterIndex < currentLetters.length && 
+                       isSpecialChar(currentLetters[currentLetterIndex])) {
+                    currentLetterIndex++;
+                }
+            }
+
+            updateInputDisplay();
+            focusHiddenInput();
+        }
+
+        // Xử lý phím từ người dùng
+        function handleKeyPress(event) {
+            if (event.key.length === 1 && /[a-zA-Z]/.test(event.key)) {
+                handleTyping(event.key.toLowerCase());
+                event.preventDefault();
+            }
+        }
+
+        // Xử lý input ẩn
+        function handleHiddenInput(event) {
+            const value = event.target.value.toLowerCase();
+            if (value.length > 0 && !isCompleted) {
+                handleTyping(value.charAt(0));
+                event.target.value = '';
+            }
+        }
+
+        // Focus input ẩn
+        function focusHiddenInput() {
+            if (!isCompleted) {
+                try {
+                    hiddenInput.focus();
+                    // Thêm thuộc tính để tránh zoom trên iOS
+                    hiddenInput.style.fontSize = '16px';
+                    setTimeout(function() {
+                        hiddenInput.style.fontSize = '';
+                    }, 100);
+                    
+                    // Ẩn gợi ý bàn phím khi đã focus
+                    mobileHint.classList.add('hidden');
+                } catch (e) {
+                    console.error('Lỗi khi focus input:', e);
+                }
+            }
+        }
+
+        // Chuyển đến từ tiếp theo
+        function goToNextWord() {
+            if (window.speechSynthesis) {
+                window.speechSynthesis.cancel();
+            }
+            if (currentWordIndex < words.length - 1) {
+                currentWordIndex++;
+                loadCurrentWord();
+            }
+            focusHiddenInput();
+        }
+
+        // Kết thúc phiên học
+        function finishSession() {
+            // Đảm bảo tất cả các từ đều có kết quả
+            words.forEach((word, index) => {
+                if (!wordResults[index]) {
+                    // Nếu từ chưa có kết quả (chưa hoàn thành), tạo kết quả mặc định
+                    const defaultResult = word.w.split('').map(letter => 
+                        isSpecialChar(letter) ? '4' : '2'
+                    ).join(',');
+                    wordResults[index] = defaultResult;
+                }
+            });
+
+            // Lưu kết quả và chuyển hướng
+            const resultsData = {
+                words: words,
+                results: wordResults,
+                timestamp: Date.now()
+            };
+            
+            try {
+                localStorage.setItem('typingResults', JSON.stringify(resultsData));
+                window.location.href = 'savtyp.html';
+            } catch (error) {
+                console.error('Lỗi khi lưu kết quả:', error);
+                alert('Có lỗi xảy ra khi lưu kết quả!');
+                window.location.href = 'chotyp.html';
+            }
+        }
+
+        // Hiển thị lỗi
+        function showError(message) {
+            inputDisplayElement.innerHTML = `
+                <div style="color: #f44336; text-align: center; padding: 40px;">
+                    <h3>❌ ${message}</h3>
+                    <button onclick="window.location.href='chotyp.html'" style="margin-top: 15px; padding: 10px 20px; background: #2196f3; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        Quay lại chọn từ
+                    </button>
+                </div>
+            `;
+        }
+
+        // Hiển thị/ẩn tiếng Việt
+        function toggleVnDisplay() {
+            isVnVisible = !isVnVisible;
+            if (isVnVisible) {
+                meaningElement.classList.remove('hidden');
+                vnBtn.classList.add('active');
+            } else {
+                meaningElement.classList.add('hidden');
+                vnBtn.classList.remove('active');
+            }
+        }
+
+        // Hiển thị/ẩn từ tiếng Anh và phiên âm
+        function toggleEnDisplay() {
+            isEnVisible = !isEnVisible;
+            if (isEnVisible) {
+                wordEnElement.classList.remove('hidden');
+                phoneticElement.classList.remove('hidden');
+                enBtn.classList.add('active');
+            } else {
+                wordEnElement.classList.add('hidden');
+                phoneticElement.classList.add('hidden');
+                enBtn.classList.remove('active');
+            }
+        }
+
+        // Đọc từ tiếng Anh
+        function speakWord() {
+            if (!currentWord) return;
+            
+            const word = currentWord.w;
+            if (!word) return;
+            
+            if (!('speechSynthesis' in window)) {
+                console.log('Trình duyệt không hỗ trợ Text-to-Speech');
+                return;
+            }
+
+            // Dừng mọi phát âm đang chạy
+            if (window.speechSynthesis) {
+                window.speechSynthesis.cancel();
+            }
+            
+            const utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = 'en-US';
+            utterance.rate = speechRate;
+            
+            // Thêm xử lý lỗi cho TTS
+            utterance.onerror = function(event) {
+                console.log('Lỗi phát âm thanh:', event.error);
+                hasSpoken = false;
+            };
+            
+            utterance.onend = function() {
+                hasSpoken = true;
+            };
+            
+            try {
+                window.speechSynthesis.speak(utterance);
+            } catch (error) {
+                console.log('Lỗi phát âm thanh:', error);
+                hasSpoken = false;
+            }
+        }
+
+        // Khởi chạy ứng dụng
+        document.addEventListener('DOMContentLoaded', initApp);
+
+        // Ngăn chặn hành vi mặc định của touch
+        document.addEventListener('touchstart', function(e) {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        document.addEventListener('gesturestart', function(e) {
+            e.preventDefault();
+        });
+
+        document.addEventListener('gesturechange', function(e) {
+            e.preventDefault();
+        });
+
+        document.addEventListener('gestureend', function(e) {
+            e.preventDefault();
+        });
+    </script>
+</body>
+</html>
