@@ -11,15 +11,12 @@
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             -webkit-tap-highlight-color: transparent;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
         }
         
         body {
             background-color: #000;
             color: #fff;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -78,10 +75,10 @@
             cursor: pointer;
             transition: all 0.3s;
             min-width: 50px;
-            touch-action: manipulation;
+            -webkit-appearance: none;
         }
         
-        .control-btn:hover {
+        .control-btn:hover, .control-btn:active {
             background: #444;
         }
         
@@ -101,7 +98,7 @@
             background: #333;
             min-width: 70px;
             box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-            z-index: 1;
+            z-index: 10;
             border-radius: 6px;
             overflow: hidden;
             top: 100%;
@@ -122,7 +119,7 @@
             transition: background 0.2s;
         }
         
-        .dropdown-content button:hover {
+        .dropdown-content button:hover, .dropdown-content button:active {
             background: #444;
         }
         
@@ -178,7 +175,8 @@
             border: 2px dashed #333;
             border-radius: 10px;
             padding: 15px;
-            touch-action: manipulation;
+            -webkit-user-select: none;
+            user-select: none;
         }
         
         .input-display:focus {
@@ -240,13 +238,17 @@
         }
         
         .hidden-input {
-            position: absolute;
-            left: -1000px;
-            top: -1000px;
-            width: 1px;
-            height: 1px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
             opacity: 0;
             pointer-events: none;
+            border: none;
+            background: transparent;
+            font-size: 16px;
+            z-index: 5;
         }
 
         .next-btn {
@@ -263,27 +265,15 @@
             font-weight: 500;
             letter-spacing: 0.5px;
             margin-top: 10px;
-            touch-action: manipulation;
+            -webkit-appearance: none;
         }
         
-        .next-btn:hover {
+        .next-btn:hover, .next-btn:active {
             background: #1976d2;
-        }
-        
-        .next-btn:active {
-            transform: translateY(1px);
         }
         
         .hidden {
             display: none !important;
-        }
-
-        .mobile-keyboard-hint {
-            text-align: center;
-            color: #666;
-            font-size: 0.9rem;
-            margin-top: 10px;
-            display: none;
         }
 
         @media (max-width: 480px) {
@@ -298,6 +288,7 @@
             .input-display {
                 font-size: 1.5rem;
                 gap: 5px;
+                min-height: 70px;
             }
             
             .letter {
@@ -330,26 +321,9 @@
                 right: 10px;
                 font-size: 0.8rem;
             }
-
-            .mobile-keyboard-hint {
-                display: block;
-            }
-        }
-
-        @media (max-height: 600px) {
-            .word-display {
-                margin-bottom: 10px;
-            }
             
-            .input-display {
-                margin-bottom: 15px;
-                min-height: 60px;
-                padding: 10px;
-            }
-            
-            .letter {
-                padding: 6px 8px;
-                min-width: 30px;
+            .hidden-input {
+                height: 50px;
             }
         }
     </style>
@@ -387,9 +361,7 @@
         
         <div class="typing-area">
             <div class="input-display" id="inputDisplay" tabindex="0"></div>
-            <input type="text" id="hiddenInput" class="hidden-input" autocomplete="off" spellcheck="false" autocapitalize="off" autocorrect="off">
-            
-            <div class="mobile-keyboard-hint" id="mobileHint">Chạm vào ô trên để hiện bàn phím</div>
+            <input type="text" id="hiddenInput" class="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
             
             <button class="next-btn hidden" id="nextBtn">Next</button>
             <button class="next-btn hidden" id="finishBtn">Kết thúc</button>
@@ -409,7 +381,6 @@
         let speechRate = parseFloat(localStorage.getItem('speechRate') || '1.0');
         let isCompleted = false;
         let hasSpoken = false;
-        let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
         // Lưu kết quả thực tế của từng từ
         let wordResults = {};
@@ -472,21 +443,14 @@
         const speedBtn = document.getElementById('speedBtn');
         const dropdown = document.querySelector('.dropdown');
         const speedOptions = document.querySelectorAll('.dropdown-content button');
-        const mobileHint = document.getElementById('mobileHint');
 
         // Lấy danh sách từ vựng từ chotyp.html
         function getWordsToType() {
             // Lấy từ localStorage
-            let selectedWords = [];
-            try {
-                selectedWords = JSON.parse(localStorage.getItem('selectedTypeWords')) || [];
-            } catch (e) {
-                console.error('Lỗi khi đọc từ localStorage:', e);
-            }
+            const selectedWords = JSON.parse(localStorage.getItem('selectedTypeWords')) || [];
             
             // Nếu không có từ, tạo dữ liệu mẫu với các từ có ký tự đặc biệt
             if (selectedWords.length === 0) {
-                console.log('Không có từ trong localStorage, tạo dữ liệu mẫu');
                 return [
                     {w: "Hello world", m: "xin chào thế giới", p: "/heˈləʊ wɜːrld/"},
                     {w: "Computer science", m: "khoa học máy tính", p: "/kəmˈpjuː.tər ˈsaɪ.əns/"},
@@ -544,9 +508,7 @@
             // Thêm event listeners
             document.addEventListener('keydown', handleKeyPress);
             inputDisplayElement.addEventListener('click', focusHiddenInput);
-            inputDisplayElement.addEventListener('touchstart', handleTouchStart);
-            inputDisplayElement.addEventListener('touchend', handleTouchEnd);
-            inputDisplayElement.addEventListener('focus', focusHiddenInput);
+            inputDisplayElement.addEventListener('touchstart', focusHiddenInput);
             speakBtn.addEventListener('click', speakWord);
             vnBtn.addEventListener('click', toggleVnDisplay);
             enBtn.addEventListener('click', toggleEnDisplay);
@@ -556,7 +518,7 @@
             // Xử lý input ẩn
             hiddenInput.addEventListener('input', handleHiddenInput);
             hiddenInput.addEventListener('blur', function() {
-                // Trên mobile, khi bàn phím ẩn, focus lại để tiếp tục gõ
+                // Trên mobile, khi bàn phím ẩn, tự động focus lại
                 if (!isCompleted) {
                     setTimeout(focusHiddenInput, 100);
                 }
@@ -568,11 +530,7 @@
                     e.stopPropagation();
                     speechRate = parseFloat(this.getAttribute('data-speed'));
                     speedBtn.textContent = `${speechRate}x`;
-                    try {
-                        localStorage.setItem('speechRate', speechRate.toString());
-                    } catch (e) {
-                        console.error('Lỗi khi lưu vào localStorage:', e);
-                    }
+                    localStorage.setItem('speechRate', speechRate.toString());
                     dropdown.classList.remove('active');
                 });
             });
@@ -597,16 +555,6 @@
             setTimeout(focusHiddenInput, 300);
         }
 
-        // Xử lý touch events để tránh zoom không mong muốn
-        function handleTouchStart(e) {
-            e.preventDefault();
-            focusHiddenInput();
-        }
-
-        function handleTouchEnd(e) {
-            e.preventDefault();
-        }
-
         // Tải từ hiện tại
         function loadCurrentWord() {
             currentWord = words[currentWordIndex];
@@ -614,7 +562,6 @@
             hasSpoken = false;
             nextBtn.classList.add('hidden');
             finishBtn.classList.add('hidden');
-            mobileHint.classList.remove('hidden');
 
             // Cập nhật nội dung các phần tử
             wordEnElement.textContent = currentWord.w || '';
@@ -648,13 +595,11 @@
             updateInputDisplay();
             updateSessionStats();
             
-            // Tự động phát âm từ (chỉ trên desktop)
-            if (!isMobile) {
-                setTimeout(speakWord, 500);
-            }
+            // Tự động phát âm từ
+            setTimeout(speakWord, 500);
             
             // Focus vào ô input
-            setTimeout(focusHiddenInput, 300);
+            setTimeout(focusHiddenInput, 100);
         }
 
         // Cập nhật hiển thị input
@@ -706,7 +651,6 @@
             
             if (allTyped && !isCompleted) {
                 isCompleted = true;
-                mobileHint.classList.add('hidden');
                 
                 // Lưu kết quả THỰC TẾ vào wordResults
                 wordResults[currentWordIndex] = resultProgress.join(',');
@@ -799,27 +743,17 @@
         // Focus input ẩn
         function focusHiddenInput() {
             if (!isCompleted) {
-                try {
-                    hiddenInput.focus();
-                    // Thêm thuộc tính để tránh zoom trên iOS
-                    hiddenInput.style.fontSize = '16px';
-                    setTimeout(function() {
-                        hiddenInput.style.fontSize = '';
-                    }, 100);
-                    
-                    // Ẩn gợi ý bàn phím khi đã focus
-                    mobileHint.classList.add('hidden');
-                } catch (e) {
-                    console.error('Lỗi khi focus input:', e);
+                hiddenInput.focus();
+                // Thử kích hoạt bàn phím ảo trên mobile
+                if (window.visualViewport) {
+                    hiddenInput.setAttribute('inputmode', 'text');
                 }
             }
         }
 
         // Chuyển đến từ tiếp theo
         function goToNextWord() {
-            if (window.speechSynthesis) {
-                window.speechSynthesis.cancel();
-            }
+            window.speechSynthesis.cancel();
             if (currentWordIndex < words.length - 1) {
                 currentWordIndex++;
                 loadCurrentWord();
@@ -907,24 +841,12 @@
                 return;
             }
 
-            // Dừng mọi phát âm đang chạy
-            if (window.speechSynthesis) {
-                window.speechSynthesis.cancel();
-            }
-            
             const utterance = new SpeechSynthesisUtterance(word);
             utterance.lang = 'en-US';
             utterance.rate = speechRate;
             
-            // Thêm xử lý lỗi cho TTS
-            utterance.onerror = function(event) {
-                console.log('Lỗi phát âm thanh:', event.error);
-                hasSpoken = false;
-            };
-            
-            utterance.onend = function() {
-                hasSpoken = true;
-            };
+            hasSpoken = true;
+            window.speechSynthesis.cancel();
             
             try {
                 window.speechSynthesis.speak(utterance);
@@ -936,25 +858,6 @@
 
         // Khởi chạy ứng dụng
         document.addEventListener('DOMContentLoaded', initApp);
-
-        // Ngăn chặn hành vi mặc định của touch
-        document.addEventListener('touchstart', function(e) {
-            if (e.touches.length > 1) {
-                e.preventDefault();
-            }
-        }, { passive: false });
-
-        document.addEventListener('gesturestart', function(e) {
-            e.preventDefault();
-        });
-
-        document.addEventListener('gesturechange', function(e) {
-            e.preventDefault();
-        });
-
-        document.addEventListener('gestureend', function(e) {
-            e.preventDefault();
-        });
     </script>
 </body>
 </html>
