@@ -235,13 +235,14 @@
             return JSON.parse(localStorage.getItem('vocabularies')) || [];
         }
 
-        // Hàm cập nhật thống kê tổng thể
+        // Hàm cập nhật thống kê tổng thể - ĐÃ SỬA
         function updateStats() {
             const allVocab = getVocabularies();
             const now = Date.now();
 
             const total = allVocab.length;
-            const due = allVocab.filter(v => (v.tnt || 0) <= now).length;
+            // CHỈ TÍNH ĐẾN HẠN CHO CÁC TỪ LEVEL >= 1
+            const due = allVocab.filter(v => (v.tl || 0) > 0 && (v.tnt || 0) <= now).length;
             const level0 = allVocab.filter(v => (v.tl || 0) === 0).length;
 
             document.getElementById('totalWords').textContent = total;
@@ -249,8 +250,10 @@
             document.getElementById('level0Words').textContent = level0;
         }
 
-        // Kiểm tra từ có cần ôn tập cho chế độ gõ không (dùng tnt)
+        // Kiểm tra từ có cần ôn tập cho chế độ gõ không (vẫn bao gồm level 0)
         function needsTypeReview(vocab) {
+            // Level 0 luôn cần học
+            if ((vocab.tl || 0) === 0) return true;
             const now = Date.now();
             return now >= (vocab.tnt || 0);
         }
@@ -270,7 +273,7 @@
             });
             wordsToType = Array.from(uniqueWords.values());
 
-            // Sắp xếp theo ưu tiên (giống như cũ)
+            // Sắp xếp theo ưu tiên
             wordsToType.sort((a, b) => {
                 if ((a.tl || 0) > 0 && (b.tl || 0) > 0) {
                     if ((a.tl || 0) === (b.tl || 0)) {
