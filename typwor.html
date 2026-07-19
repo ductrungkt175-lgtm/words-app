@@ -655,6 +655,16 @@
                 // Lưu kết quả THỰC TẾ vào wordResults
                 wordResults[currentWordIndex] = resultProgress.join(',');
                 
+                // ===== THÊM PHẦN HIỂN THỊ TỪ, NGHĨA, PHIÊN ÂM =====
+                wordEnElement.classList.remove('hidden');
+                meaningElement.classList.remove('hidden');
+                phoneticElement.classList.remove('hidden');
+                vnBtn.classList.add('active');
+                enBtn.classList.add('active');
+                isVnVisible = true;
+                isEnVisible = true;
+                // ==============================================
+                
                 // Phát âm thanh khi hoàn thành từ
                 setTimeout(speakWord, 300);
                 
