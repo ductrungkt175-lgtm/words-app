@@ -52,6 +52,47 @@
             background-color: #555;
         }
 
+        /* Phần thống kê mới */
+        .stats-overview {
+            background-color: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 15px 20px;
+            margin-bottom: 25px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            gap: 10px 20px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+        }
+
+        .stat-item .label {
+            color: #aaa;
+        }
+
+        .stat-item .value {
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .stat-item .value.due {
+            color: #ffa726;
+        }
+
+        .stat-item .value.level0 {
+            color: #4fc3f7;
+        }
+
+        .stat-item .value.total {
+            color: #fff;
+        }
+
         .word-list {
             margin-top: 20px;
         }
@@ -161,6 +202,22 @@
             <a href="index.html" class="back-button">← Quay lại</a>
         </header>
 
+        <!-- PHẦN THỐNG KÊ TỔNG THỂ -->
+        <div class="stats-overview" id="statsOverview">
+            <div class="stat-item">
+                <span class="label">📚 Tổng từ:</span>
+                <span class="value total" id="totalWords">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="label">⏰ Đến hạn:</span>
+                <span class="value due" id="dueWords">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="label">🆕 Level 0:</span>
+                <span class="value level0" id="level0Words">0</span>
+            </div>
+        </div>
+
         <div id="warningMessage" class="warning-message hidden">
             <!-- Thông báo cảnh báo sẽ hiện ở đây -->
         </div>
@@ -178,19 +235,33 @@
             return JSON.parse(localStorage.getItem('vocabularies')) || [];
         }
 
-        // Kiểm tra từ có cần ôn tập không (DÙNG TRƯỜNG tnt - type next time)
+        // Hàm cập nhật thống kê tổng thể
+        function updateStats() {
+            const allVocab = getVocabularies();
+            const now = Date.now();
+
+            const total = allVocab.length;
+            const due = allVocab.filter(v => (v.tnt || 0) <= now).length;
+            const level0 = allVocab.filter(v => (v.tl || 0) === 0).length;
+
+            document.getElementById('totalWords').textContent = total;
+            document.getElementById('dueWords').textContent = due;
+            document.getElementById('level0Words').textContent = level0;
+        }
+
+        // Kiểm tra từ có cần ôn tập cho chế độ gõ không (dùng tnt)
         function needsTypeReview(vocab) {
             const now = Date.now();
             return now >= (vocab.tnt || 0);
         }
 
-        // Lấy từ vựng cần học cho chế độ gõ - LỌC TỪ TRÙNG
+        // Lấy từ vựng cần học cho chế độ gõ - LỌC TỪ TRÙNG, GIỚI HẠN 7 TỪ
         function getWordsToType() {
             const allVocabularies = getVocabularies();
             
             let wordsToType = allVocabularies.filter(vocab => needsTypeReview(vocab));
 
-            // LỌC BỎ TỪ TRÙNG - CHỈ GIỮ LẠI 1 TỪ CHO MỖI TỪ TIẾNG ANH
+            // Lọc bỏ từ trùng (giữ 1 từ cho mỗi từ tiếng Anh)
             const uniqueWords = new Map();
             wordsToType.forEach(vocab => {
                 if (!uniqueWords.has(vocab.w)) {
@@ -199,31 +270,23 @@
             });
             wordsToType = Array.from(uniqueWords.values());
 
-            // Sắp xếp theo ưu tiên GIỐNG NHƯ choose.html
+            // Sắp xếp theo ưu tiên (giống như cũ)
             wordsToType.sort((a, b) => {
-                // Ưu tiên từ có type level > 0 trước
                 if ((a.tl || 0) > 0 && (b.tl || 0) > 0) {
-                    // Cùng có type level > 0, sắp xếp theo type level thấp trước
                     if ((a.tl || 0) === (b.tl || 0)) {
-                        // Cùng type level, sắp xếp theo thời gian học cuối (type last time)
                         return (a.tlt || 0) - (b.tlt || 0);
                     }
                     return (a.tl || 0) - (b.tl || 0);
                 }
-                
-                // Ưu tiên từ có type level > 0 trước type level = 0
                 if ((a.tl || 0) > 0 && (b.tl || 0) === 0) return -1;
                 if ((b.tl || 0) > 0 && (a.tl || 0) === 0) return 1;
-                
-                // Cả hai đều có type level = 0, sắp xếp theo thư mục (nếu có)
                 if (a.s !== b.s) {
                     return a.s.localeCompare(b.s);
                 }
-                
                 return 0;
             });
 
-            // GIỚI HẠN 7 TỪ
+            // Giới hạn 7 từ
             return wordsToType.slice(0, 7);
         }
 
@@ -231,15 +294,10 @@
         function playWordPronunciation(word) {
             if ('speechSynthesis' in window) {
                 speechSynthesis.cancel();
-                
                 const utterance = new SpeechSynthesisUtterance(word);
                 utterance.lang = 'en-US';
                 utterance.rate = 0.8;
-                
-                console.log('🔊 Đang phát âm:', word);
                 speechSynthesis.speak(utterance);
-            } else {
-                console.log('❌ Trình duyệt không hỗ trợ phát âm thanh');
             }
         }
 
@@ -251,7 +309,6 @@
 
             const wordsToType = getWordsToType();
 
-            // KHÔNG YÊU CẦU TỐI THIỂU 4 TỪ NỮA - 1 TỪ CŨNG HỌC ĐƯỢC
             if (wordsToType.length === 0) {
                 warningMessage.innerHTML = 'Không có từ nào để gõ. Cần nạp thêm từ mới!';
                 warningMessage.classList.remove('hidden');
@@ -261,7 +318,6 @@
                 studyButton.disabled = false;
             }
 
-            // Hiển thị danh sách từ
             if (wordsToType.length === 0) {
                 wordList.innerHTML = '<div class="no-data">Không có từ nào để gõ</div>';
                 return;
@@ -283,28 +339,22 @@
                 `;
             }).join('');
 
-            // Hiển thị thông tin số từ
             studyButton.textContent = `Bắt đầu gõ từ (${wordsToType.length} từ)`;
         }
 
         // Khởi chạy
         document.addEventListener('DOMContentLoaded', function() {
+            updateStats();          // Cập nhật thống kê ngay khi load
             displayWordsToType();
 
-            // Gắn sự kiện nút Study - BỎ KIỂM TRA SỐ LƯỢNG TỐI THIỂU
+            // Gắn sự kiện nút Study
             document.getElementById('studyButton').addEventListener('click', function() {
                 const selectedWords = getWordsToType();
-                
-                // KHÔNG KIỂM TRA SỐ LƯỢNG TỐI THIỂU - 1 TỪ CŨNG HỌC ĐƯỢC
                 if (selectedWords.length === 0) {
                     alert('Không có từ nào để gõ!');
                     return;
                 }
-                
-                // Lưu danh sách từ đã chọn vào localStorage
                 localStorage.setItem('selectedTypeWords', JSON.stringify(selectedWords));
-                
-                // Chuyển sang trang typwor.html
                 window.location.href = 'typwor.html';
             });
         });
@@ -325,6 +375,7 @@
                 ];
                 localStorage.setItem('vocabularies', JSON.stringify(testData));
                 console.log('✅ Đã tạo dữ liệu test tự động cho chế độ gõ');
+                updateStats();
                 displayWordsToType();
             }
         }, 1000);
